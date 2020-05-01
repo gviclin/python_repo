@@ -199,13 +199,13 @@ plt.show()
 print(resampled["watts"].rolling(5).mean().max())'''
 
 # display the plot
-begin = streams[streams.time < streams.size]	
+'''begin = streams[streams.time < streams.size]	
 begin2 = resampled[resampled.time < streams.size]
 
 plt.plot(begin["time"], begin["watts"], 'go-')
 plt.plot(begin2["time"], begin2["watts"], 'x')
 plt.legend(['original', 'resampledpled'], loc='best')
-plt.show()
+plt.show()'''
 
 #, color='green'
 '''
