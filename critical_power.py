@@ -96,11 +96,18 @@ class CriticalPower():
 
 			# Returns a stravaio.Streams object that wraps the 
 		# [Strava StreamSet](https://developers.strava.com/docs/reference/#api-models-StreamSet)
-		streams = self.client.get_activity_streams(activity_id,self.athlete.id)
+		streams = self.client.get_activity_streams(activity_id,self.athlete.id, False) #local = False to retreive data from Strava
+		
+		streams.store_locally()
+		
+		streams = pd.DataFrame(streams.to_dict())
 
 		#streams.store_locally()
-		#to store the stream locally in C:\Users\gaelv\.stravadata\streams_134706
-
+		#to store the stream locally 
+		# Windows : C:\Users\gaelv\.stravadata\streams_134706
+		# Linux : Store streams locally (~/.stravadata/streams_<athlete_id>/streams_<id>.parquet) as a .parquet file, that can be loaded later using the
+		# pandas.read_parquet()
+		
 		#streams.set_index("time", inplace = True) 
 
 		streams["dt"] = pd.to_timedelta(streams["time"], unit='s')

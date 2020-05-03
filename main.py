@@ -76,48 +76,49 @@ df = cp.get_cp_list_by_id(3330576768)
 
 print("result :", str(df))
 
-'''
-plt.plot(df["duration"], df["mean_watts"], 'x-')
-# gcf : get current figure
-plt.gcf().autofmt_xdate()
-myFmt = mdates.DateFormatter('%H:%M:%S')
-#Get the current Axes
-plt.gca().xaxis.set_major_formatter(myFmt)
-#plt.gca().set_xscale('log')
-plt.grid(True)
-plt.show()
-'''
+if df is not None:
+	'''
+	plt.plot(df["duration"], df["mean_watts"], 'x-')
+	# gcf : get current figure
+	plt.gcf().autofmt_xdate()
+	myFmt = mdates.DateFormatter('%H:%M:%S')
+	#Get the current Axes
+	plt.gca().xaxis.set_major_formatter(myFmt)
+	#plt.gca().set_xscale('log')
+	plt.grid(True)
+	plt.show()
+	'''
 
-fig, ax = plt.subplots()
-ax.set_title('Critical power')
-ax.plot(df["isec"], df["mean_watts"], 'x-')
-
-
-def to_date(x, pos):
-    str = time.strftime("%H:%M:%S", time.gmtime(x))
-    #print("to_date", x, str)
-    return str
+	fig, ax = plt.subplots()
+	ax.set_title('Critical power')
+	ax.plot(df["isec"], df["mean_watts"], 'x-')
 
 
-fig.autofmt_xdate()
-
-# strx = time.strftime("%H:%M:%S", time.gmtime(x))
-#myFmt = mdates.DateFormatter('%H:%M:%S')
-myFmt = tick.FuncFormatter(to_date)
-ax.xaxis.set_major_formatter(myFmt)
-#ax.set_xscale('log')
+	def to_date(x, pos):
+		str = time.strftime("%H:%M:%S", time.gmtime(x))
+		#print("to_date", x, str)
+		return str
 
 
-plt.grid(True)
-cursor = SnaptoCursor(
-	ax,
-	df["isec"],
-	df["mean_watts"],
-	fig.get_size_inches()*fig.dpi) # size in pixels
-	
-fig.canvas.mpl_connect('motion_notify_event', cursor.mouse_move)
+	fig.autofmt_xdate()
 
-plt.show()
+	# strx = time.strftime("%H:%M:%S", time.gmtime(x))
+	#myFmt = mdates.DateFormatter('%H:%M:%S')
+	myFmt = tick.FuncFormatter(to_date)
+	ax.xaxis.set_major_formatter(myFmt)
+	#ax.set_xscale('log')
+
+
+	plt.grid(True)
+	cursor = SnaptoCursor(
+		ax,
+		df["isec"],
+		df["mean_watts"],
+		fig.get_size_inches()*fig.dpi) # size in pixels
+		
+	fig.canvas.mpl_connect('motion_notify_event', cursor.mouse_move)
+
+	plt.show()
 
 
 
