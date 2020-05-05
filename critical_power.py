@@ -107,6 +107,7 @@ class CriticalPower():
 		finally:
 			myFile.close
 
+		myFile.close
 		access_token = myFile.read()
 		# print ('STRAVA_ACCESS_TOKEN : ' + str (access_token))
 

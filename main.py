@@ -17,7 +17,7 @@ from critical_power import CriticalPower
 from activity import Activity
 
 
-'''
+
 #get an instance of CriticalPower
 cp = CriticalPower()
 #HT  : 3330576768
@@ -25,9 +25,9 @@ cp = CriticalPower()
 # Get critical power matrix
 df = cp.get_cp_list_by_id(3330576768)
 cp.show_plot(df)
-'''
 
+'''
 act = Activity()
 act.get_activities()
-
+'''
 

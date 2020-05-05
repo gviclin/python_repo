@@ -40,13 +40,8 @@ class Activity():
 		# Returns a stravaio.Athlete object that wraps the
 		# [Strava DetailedAthlete](https://developers.strava.com/docs/reference/#api-models-DetailedAthlete)
 		# with few added data-handling methods
-		try:
-			self.athlete = self.client.get_logged_in_athlete()
-		except ApiException as e:
-			print ("exception in  get_logged_in_athlete")
-			os.remove("access_token")
-			__init__()
-			
+		self.athlete = self.client.get_logged_in_athlete()
+		
 		#print ("athlete :", str(self.athlete))
 
 		# Dump athlete into a JSON friendly dict (e.g. all datetimes are converted into iso8601)
@@ -88,7 +83,7 @@ class Activity():
 			myFile.close
 			
 		myFile.close
-		# print ('STRAVA_ACCESS_TOKEN : ' + str (token))
+		#print ('STRAVA_ACCESS_TOKEN : ' + str (token))
 		return token
 		
 
