@@ -94,7 +94,7 @@ class Activity():
 		-------
 		activity: dataframe object
 		"""
-		annee = 2016
+		annee = 2020
 		month=1
 		startdate = datetime.datetime(annee,month, 1, 1,1,1)
 		startbefore = datetime.datetime(annee+4, month, 1, 1,1,1)
@@ -108,7 +108,6 @@ class Activity():
 		
 		pp = pprint.PrettyPrinter(indent=4)
 		#pp.pprint(list_activities[0])
-
 					
 
 		print("startdate list_activities : ", len(list_activities), " elements")
@@ -120,7 +119,7 @@ class Activity():
 			os.mkdir(activities_dir)
 		
 		streams = []
-		
+		 
 		# Obvious use - store all activities locally
 		for a in list_activities:
 			
