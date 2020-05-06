@@ -1165,7 +1165,7 @@ class SummaryActivity(object):
   
     def dump(self):
         """Returns the string representation of the model"""
-        return str(self.start_date_local) + "dist : " + str(round(self.distance/1000,2)) +  " km," + self.name + ", type : " + self.type
+        return str(self.start_date_local) + ", dist : " + str(round(self.distance/1000,2)) +  " km," + self.name + ", type : " + self.type
 
     def __repr__(self):
         """For `print` and `pprint`"""

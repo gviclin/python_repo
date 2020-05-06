@@ -34,7 +34,7 @@ class Activity():
 		access_token = self.read_file_token()
 
 		self.client = StravaIO(access_token=access_token)
-		print (self.client)		
+		#print (self.client)		
 		
 		# Get logged in athlete (e.g. the owner of the token)
 		# Returns a stravaio.Athlete object that wraps the
@@ -94,17 +94,25 @@ class Activity():
 		-------
 		activity: dataframe object
 		"""
+		annee = 2016
+		month=1
+		startdate = datetime.datetime(annee,month, 1, 1,1,1)
+		startbefore = datetime.datetime(annee+4, month, 1, 1,1,1)
+
+		print("from", startdate.strftime("%Y-%m-%d"), "to", startbefore.strftime("%Y-%m-%d"))
 		
 		# Get list of athletes activities since a given date (after) given in a human friendly format.
 		# Kudos to [Maya: Datetimes for Humans(TM)](https://github.com/kennethreitz/maya)
 		# Returns a list of [Strava SummaryActivity](https://developers.strava.com/docs/reference/#api-models-SummaryActivity) objects
-		list_activities = self.client.get_logged_in_athlete_activities(after='last week',page=0,per_page =100 )
+		list_activities = self.client.get_logged_in_athlete_activities(after=startdate,before=startbefore, page=0,per_page =100 )
 		
 		pp = pprint.PrettyPrinter(indent=4)
 		#pp.pprint(list_activities[0])
 
-		print("list_activities : ", len(list_activities), " elements")
-		
+					
+
+		print("startdate list_activities : ", len(list_activities), " elements")
+	
 		strava_dir = dir_stravadata()
 		athlete_id = self.athlete.id
 		activities_dir = os.path.join(strava_dir, f"summary_activities_{athlete_id}")
@@ -117,16 +125,17 @@ class Activity():
 		for a in list_activities:
 			
 			#store activity
-			print(a.dump())
+			#print(a.dump())
 			_dict = a.to_dict()
-			_dict = convert_datetime_to_iso8601(_dict)
+			_dict = convert_datetime_to_iso8601(_dict)			
+			start_dt = a.start_date.strftime("%Y-%m-%d")
 
-			f_name = f"summary_activity_{a.id}.json"
+			f_name = f"{start_dt}_{a.id}.json"
 			with open(os.path.join(activities_dir, f_name), 'w') as fp:
 				json.dump(_dict, fp)
 			
 			#store stream if not exist yet
-			if not self.isStreamStored(a.id):
+			'''if not self.isStreamStored(a.id):
 				streams = self.client.get_activity_streams(a.id, self.athlete.id, False) #local = False to retreive data from Strava
 				streams.store_locally()
 				streams = pd.DataFrame(streams.to_dict())
@@ -137,7 +146,8 @@ class Activity():
 				if f_path in glob.glob(f_path):
 					streams = pd.read_parquet(f_path)
 			
-			print("stream id : ",a.id)
+			print("stream id : ",a.id)'''
+
 
 
 	def isStreamStored(self,activity_id):

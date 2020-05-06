@@ -658,6 +658,8 @@ class ActivitiesApi(object):
 
         # Authentication setting
         auth_settings = ['strava_oauth']  # noqa: E501
+        
+        #print("query_params", str(query_params))
 
         return self.api_client.call_api(
             '/athlete/activities', 'GET',
