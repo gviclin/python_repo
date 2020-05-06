@@ -4,6 +4,7 @@ import glob
 import pandas as pd
 import numpy as np
 import cv2
+import cufflinks as cf
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -108,9 +109,18 @@ class Statist():
 		#print(tabulate(df, headers='keys', tablefmt='psql'))
 		#pp.pprint(file_data)	
 		
-		print(df.dtypes)
+		#print(df.dtypes)
+		
+		
+		fig = df.iplot(asFigure=True, xTitle="The X Axis",
+                    yTitle="The Y Axis", title="The Figure Title", x='id',y='distance')
+		fig.show()
+		
+		'''df=cf.datagen.lines(4)
+		fig = df.iplot(asFigure=True, hline=[2,4], vline=['2015-02-10'])
+		fig.show()'''
 		
 		self.logger.debug("end of stat_by_year")
-
+	
 
 
