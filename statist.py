@@ -83,8 +83,8 @@ class Statist():
 
 					list.append(df_temp)
 					i +=1
-					if i >20:
-						break
+					'''if i >20:
+						break'''
 		
 		#concatenate all dataframe
 		df = pd.concat(list)
@@ -96,6 +96,8 @@ class Statist():
 		df['year'] = pd.DatetimeIndex(df['date']).year
 		df['month'] = pd.DatetimeIndex(df['date']).month
 		
+		df['d'] = round(df['distance'] / 1000,1)
+		
 		#df = df.reindex(columns=sorted(df.columns))
 		column_list = ['id', 'date','name', 'distance','elapsed_time','moving_time']
 		list_col = (column_list + [a for a in df.columns if a not in column_list] ) 
@@ -103,18 +105,32 @@ class Statist():
 		df = df.reindex(columns=list_col)
 		
 		df.sort_values(by='date')
+		
+		'''#display all types
+		df_by_type = df.groupby(['type']).count()
+		df_by_type.to_html('temp.html')'''
+		
+		
+		# Filter run activities
+		filter = df["type"] == "Run"
+		df_runnning = df[filter]
+		
+		df_by_month = df_runnning.groupby(['year','month']).sum()
 
 		
-		df.to_html('temp.html')
+		df_by_month.to_html('temp.html')
+		df_by_month.to_excel("stat_by_month.xlsx")  
 		#print(tabulate(df, headers='keys', tablefmt='psql'))
 		#pp.pprint(file_data)	
 		
 		#print(df.dtypes)
 		
-		
-		fig = df.iplot(asFigure=True, xTitle="The X Axis",
-                    yTitle="The Y Axis", title="The Figure Title", x='id',y='distance')
-		fig.show()
+
+		'''
+		fig = df.iplot(asFigure=True, xTitle="Time",
+                    yTitle="Distance", title="The Figure Title", x='date',y=['d','month'],
+					mode = "lines+markers")
+		fig.show()'''
 		
 		'''df=cf.datagen.lines(4)
 		fig = df.iplot(asFigure=True, hline=[2,4], vline=['2015-02-10'])
