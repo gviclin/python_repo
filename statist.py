@@ -116,9 +116,9 @@ class Statist():
 		#Store the dataframe in html file
 		df.to_html(os.path.join(self.strava_dir, f"global_data_{athlete_id}.html"))
 		
-	def Stat_dist_by_month(self,athlete_id):
+	def Stat_dist_by_month(self,athlete_id, activityType):
 		""" Compute_the_db 
-
+		activityType : "Run", "Hike", "VirtualRide", "VirtualRun", "Walk","Ride"
 		Returns
 		-------
 		todo
@@ -133,9 +133,12 @@ class Statist():
 		
 		
 		# Filter run activities
-		filter = df["type"] == "Run"
-		df_runnning = df[filter]
-		
+		filter = df["type"].isin(activityType)
+		'''for i in activityType:
+			filter = filter | df["type"] == i'''
+			
+		df_runnning = df[filter]		
+	
 		df_by_month = df_runnning.groupby(['year','month']).sum()
 		
 		df_by_month = df_by_month[["distance","elapsed_time","moving_time","total_elevation_gain"]]
@@ -145,8 +148,8 @@ class Statist():
 		df_by_month["avg_speed"] = round(3600 * df_by_month["distance"] / df_by_month["moving_time"],1)
 		df_by_month["avg_elev_by_10km"] = round(10 * df_by_month["total_elevation_gain"] / df_by_month["distance"],0)
 		
-		df_by_month.to_html(os.path.join(self.strava_dir, f"stat_by_month_{athlete_id}.html"))
-		df_by_month.to_excel(os.path.join(self.strava_dir, f"stat_by_month_{athlete_id}.xlsx"))
+		df_by_month.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_by_month_{athlete_id}.html"))
+		df_by_month.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_by_month_{athlete_id}.xlsx"))
 		#print(tabulate(df, headers='keys', tablefmt='psql'))
 		#pp.pprint(file_data)	
 		
@@ -171,10 +174,11 @@ class Statist():
 		df_dist.fillna(0, inplace=True)
 		df_dist = df_dist.round(1)
 		
+		print("type :",activityType)
 		print(df_dist)
 		
-		df_dist.to_html(os.path.join(self.strava_dir, f"stat_distance_{athlete_id}.html"))
-		df_dist.to_excel(os.path.join(self.strava_dir, f"stat_distance_{athlete_id}.xlsx"))
+		df_dist.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.html"))
+		df_dist.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.xlsx"))
 		'''
 		fig = df.iplot(asFigure=True, xTitle="Time",
                     yTitle="Distance", title="The Figure Title", x='date',y=['d','month'],

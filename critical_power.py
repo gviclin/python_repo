@@ -1,5 +1,6 @@
 from stravaio import strava_oauth2
 from stravaio import StravaIO
+from stravaio import dir_stravadata
 
 import pandas as pd
 import numpy as np
@@ -77,6 +78,7 @@ class SnaptoCursor:
 class CriticalPower():
 
 	def __init__(self):
+		self.strava_dir = dir_stravadata()
 		# Public identifier for apps
 		self.STRAVA_CLIENT_ID = 9402
 		
@@ -128,7 +130,7 @@ class CriticalPower():
 		# Store athlete infor as a JSON locally (~/.stravadata/athlete_<id>.json)
 		# i.e. C:\Users\gaelv\.stravadata\athlete_134706.json
 		self.athlete.store_locally()
-
+		
 		# Get locally stored athletes (returns a generator of dicts)
 		#local_athletes = client.local_athletes()
 				
@@ -260,6 +262,8 @@ class CriticalPower():
 		#df_stat['mean_hrm'] = df_stat.apply(lambda row: resampled["heartrate"].rolling(row["isec"]).mean().mean(), axis=1)
 
 		#df_stat.to_csv(r'D:\python\data\toto.csv', index = True, header=True)
+		
+		df_stat.to_html(os.path.join(self.strava_dir, f"stat_cp_{activity_id}_{self.athlete.id}.html"))
 
 		#set a datetime index 
 		#df_stat.index = pd.TimedeltaIndex(df_stat["duration"], name = "datetime")
