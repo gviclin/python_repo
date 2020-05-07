@@ -47,10 +47,15 @@ def run():
 '''
 	'''
 	act = Activity()
-	act.get_activities()
-'''
+	act.get_activities()'''
+	
+	athlete_id = 134706
+
 	stat = Statist(logger)
-	stat.load_all_activities(134706)
+	#stat.Compute_the_db(athlete_id)
+	stat.Stat_dist_by_month(athlete_id)
+	
+	
 	
 run()
 

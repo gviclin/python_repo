@@ -25,9 +25,10 @@ class Statist():
 	def __init__(self, logger):
 		self.i = 5
 		self.logger = logger
+		self.strava_dir = dir_stravadata()
 
-	def load_all_activities(self,athlete_id):
-		"""Get stat_by_year 
+	def Compute_the_db(self,athlete_id):
+		""" Compute_the_db 
 
 		Returns
 		-------
@@ -35,8 +36,7 @@ class Statist():
 		"""
 		pp = pprint.PrettyPrinter(indent=4)
 		# retreive the directory
-		strava_dir = dir_stravadata()
-		activities_dir = os.path.join(strava_dir, f"summary_activities_{athlete_id}")
+		activities_dir = os.path.join(self.strava_dir, f"summary_activities_{athlete_id}")
 		if not os.path.exists(activities_dir):
 			self.logger.debug("path ",activities_dir,"does not exist !")
 
@@ -70,7 +70,7 @@ class Statist():
 					file_data.pop('start_date', None)		
 					file_data.pop('start_latlng', None)
 					file_data.pop('timezone', None)		
-					file_data.pop('total_elevation_gain', None)
+					#file_data.pop('total_elevation_gain', None)
 					file_data.pop('weighted_average_watts', None)
 					file_data.pop('average_speed', None)
 					file_data.pop('average_watts', None)
@@ -96,7 +96,9 @@ class Statist():
 		df['year'] = pd.DatetimeIndex(df['date']).year
 		df['month'] = pd.DatetimeIndex(df['date']).month
 		
-		df['d'] = round(df['distance'] / 1000,1)
+		df.sort_values(by='date')
+		
+		df['distance'] = round(df['distance'] / 1000,3)
 		
 		#df = df.reindex(columns=sorted(df.columns))
 		column_list = ['id', 'date','name', 'distance','elapsed_time','moving_time']
@@ -104,7 +106,26 @@ class Statist():
 		#print(str(list_col))
 		df = df.reindex(columns=list_col)
 		
-		df.sort_values(by='date')
+		#Store the dataframe
+		f_name = f"global_data_{athlete_id}.parquet"
+		df.to_parquet(os.path.join(self.strava_dir, f_name))
+		
+		#Store the dataframe in excell file
+		df.to_excel(os.path.join(self.strava_dir, f"global_data_{athlete_id}.xlsx"))
+		
+		#Store the dataframe in html file
+		df.to_html(os.path.join(self.strava_dir, f"global_data_{athlete_id}.html"))
+		
+	def Stat_dist_by_month(self,athlete_id):
+		""" Compute_the_db 
+
+		Returns
+		-------
+		todo
+		"""
+		f_name = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")
+		df = pd.read_parquet(f_name)
+		#, engine='arrow')
 		
 		'''#display all types
 		df_by_type = df.groupby(['type']).count()
@@ -116,16 +137,44 @@ class Statist():
 		df_runnning = df[filter]
 		
 		df_by_month = df_runnning.groupby(['year','month']).sum()
-
 		
-		df_by_month.to_html('temp.html')
-		df_by_month.to_excel("stat_by_month.xlsx")  
+		df_by_month = df_by_month[["distance","elapsed_time","moving_time","total_elevation_gain"]]
+		
+		df_by_month.drop('elapsed_time', axis=1,inplace=True)
+		
+		df_by_month["avg_speed"] = round(3600 * df_by_month["distance"] / df_by_month["moving_time"],1)
+		df_by_month["avg_elev_by_10km"] = round(10 * df_by_month["total_elevation_gain"] / df_by_month["distance"],0)
+		
+		df_by_month.to_html(os.path.join(self.strava_dir, f"stat_by_month_{athlete_id}.html"))
+		df_by_month.to_excel(os.path.join(self.strava_dir, f"stat_by_month_{athlete_id}.xlsx"))
 		#print(tabulate(df, headers='keys', tablefmt='psql'))
 		#pp.pprint(file_data)	
 		
 		#print(df.dtypes)
 		
-
+		#stat by month and year
+		df_dist = df_by_month[["distance"]]
+		
+		#df_dist.reset_index(level=1, inplace=True)
+		#df_dist = df_dist.transpose()
+		
+		#df1 = df_dist["year"]
+		
+		df_dist.reset_index(level="year", inplace=True)
+		df_dist.reset_index(level="month", inplace=True)
+		
+		df_dist = df_dist.pivot(index='year', columns='month', values='distance')
+		
+		#add annual stat
+		df_dist["total"] = df_dist.sum(axis=1)
+		
+		df_dist.fillna(0, inplace=True)
+		df_dist = df_dist.round(1)
+		
+		print(df_dist)
+		
+		df_dist.to_html(os.path.join(self.strava_dir, f"stat_distance_{athlete_id}.html"))
+		df_dist.to_excel(os.path.join(self.strava_dir, f"stat_distance_{athlete_id}.xlsx"))
 		'''
 		fig = df.iplot(asFigure=True, xTitle="Time",
                     yTitle="Distance", title="The Figure Title", x='date',y=['d','month'],
@@ -137,6 +186,5 @@ class Statist():
 		fig.show()'''
 		
 		self.logger.debug("end of stat_by_year")
-	
-
-
+		
+		
