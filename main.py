@@ -45,14 +45,19 @@ def run():
 	df = cp.get_cp_list_by_id(3412908429)
 	#cp.show_plot(df)'''
 
-	'''
-	act = Activity()
-	act.get_activities()'''
+	
+	'''act = Activity()
+	annee = 2020
+	month=1
+	startdate = datetime.datetime(annee,month, 1, 1,1,1)
+	startbefore = datetime.datetime.now()
+	act.retreive_strava_activities(startdate, startbefore)'''
 	
 	athlete_id = 134706
 
+
 	stat = Statist(logger)
-	#stat.Compute_the_db(athlete_id)
+	#stat.Compute_the_local_db(athlete_id)
 	
 	
 	#stat.Stat_dist_by_month(athlete_id,["Run"])

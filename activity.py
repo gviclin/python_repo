@@ -87,18 +87,13 @@ class Activity():
 		return token
 		
 
-	def get_activities(self):
+	def retreive_strava_activities(self, startdate, startbefore):
 		"""Get activitiesfrom activity ID
 
 		Returns
 		-------
 		activity: dataframe object
 		"""
-		annee = 2020
-		month=1
-		startdate = datetime.datetime(annee,month, 1, 1,1,1)
-		startbefore = datetime.datetime(annee+4, month, 1, 1,1,1)
-
 		print("from", startdate.strftime("%Y-%m-%d"), "to", startbefore.strftime("%Y-%m-%d"))
 		
 		# Get list of athletes activities since a given date (after) given in a human friendly format.

@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import cv2
 import cufflinks as cf
+import plotly.express as px
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -27,7 +28,7 @@ class Statist():
 		self.logger = logger
 		self.strava_dir = dir_stravadata()
 
-	def Compute_the_db(self,athlete_id):
+	def Compute_the_local_db(self,athlete_id):
 		""" Compute_the_db 
 
 		Returns
@@ -99,7 +100,7 @@ class Statist():
 		df['month'] = df['month'].apply(str)
 		df['year'] = df['year'].apply(str)
 		
-		df.sort_values(by='date')
+		df.sort_values(by='date', inplace=True)
 		
 		df['distance'] = round(df['distance'] / 1000,3)
 		
@@ -118,6 +119,8 @@ class Statist():
 		
 		#Store the dataframe in html file
 		df.to_html(os.path.join(self.strava_dir, f"global_data_{athlete_id}.html"))
+		
+		
 		
 	def Stat_dist_by_month(self,athlete_id, activityType):
 		""" Compute_the_db 
@@ -179,7 +182,7 @@ class Statist():
 		df_dist["month"] = pd.to_numeric(df_dist["month"])	
 		df_dist.sort_values(by='month',inplace =True)		
 		
-		#df_dist["month_str"] = (datetime.date(1900, df_dist["month"], 1).strftime('%B'))
+		#Create a column with the month string
 		df_dist['month_str'] = df_dist.apply(lambda row: datetime.date(1900, int(row["month"]), 1).strftime('%B'), axis=1)
 		
 		print("")
@@ -198,9 +201,7 @@ class Statist():
 			mode = "lines+markers")
 		fig.show()
 		
-		'''
-
-		
+		'''		
 		fig, ax = plt.subplots()
 		ax.set_title('Month statistics')
 		ax.plot(
@@ -213,6 +214,7 @@ class Statist():
 		
 		self.logger.debug("end of stat_by_year")
 		
+	
 	
 	def Stat_dist_annual(self,athlete_id, activityType):
 		""" Compute_the_db 
@@ -231,11 +233,11 @@ class Statist():
 		
 		df = df[["year","month","date","distance","elapsed_time","moving_time","total_elevation_gain"]]
 		
-		df.set_index("date",inplace=True)
+		df.set_index("date",inplace=True, drop=False)
 		
 		df['cumul_dist'] = df.groupby(df.index.year)["distance"].cumsum()
-		#df.apply(lambda row: row["227538958"], axis=1)
-		df['dt'] = df.index
+		
+		df["date"] = df.apply(lambda row:  row["date"].replace(year = 1900), axis=1)
 		
 		print("")
 		print("type :",activityType)
@@ -244,10 +246,37 @@ class Statist():
 		#print(tabulate(df, headers='keys', tablefmt='psql'))
 		df.to_html(os.path.join(self.strava_dir, f"temp.html"))
 		
-		fig = df.iplot(asFigure=True, xTitle="Month",
-		yTitle="Distance", title="By month", x="dt",y="cumul_dist",
-		mode = "lines")
+		fig = px.line(
+			df,
+			 x="date",
+			  y="cumul_dist",
+			  line_group="year",
+			  color="year")
+			
+		fig.update_layout(
+			title=f"Annual {'_'.join(activityType)} Statistics",
+			xaxis_tickformat = '%-d-%b',
+			xaxis = dict(
+				title = "Month",
+				nticks =12
+				#tickmode = 'linear',
+				#type="date"
+			),
+			yaxis = dict(
+				title = "Cumul Km",
+				nticks =20,
+				dtick=100
+			)
+		)	
+			
+
 		fig.show()
+		
+		
+		'''fig = df.iplot(asFigure=True, xTitle="Month",
+		yTitle="Distance", title="Annual statistics", x="dt",y="cumul_dist",
+		mode = "lines")
+		fig.show()'''
 	
 		return 
 		
