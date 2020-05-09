@@ -36,27 +36,30 @@ def run():
 	# add ch to logger
 	logger.addHandler(ch)
 
-	
+	'''
 	#get an instance of CriticalPower
 	cp = CriticalPower()
-	#HT  : 3330576768
+	#HT  : 3330576768 
 	#CAP : 3136818310
 	# Get critical power matrix
 	df = cp.get_cp_list_by_id(3412908429)
-	#cp.show_plot(df)
+	#cp.show_plot(df)'''
 
 	'''
 	act = Activity()
 	act.get_activities()'''
-	'''
+	
 	athlete_id = 134706
 
 	stat = Statist(logger)
 	#stat.Compute_the_db(athlete_id)
-	stat.Stat_dist_by_month(athlete_id,["Run"])
-	#stat.Stat_dist_by_month(athlete_id,["Ride"])
-	stat.Stat_dist_by_month(athlete_id,["Ride","VirtualRide"])
-	'''
+	
+	
+	#stat.Stat_dist_by_month(athlete_id,["Run"])
+	#stat.Stat_dist_by_month(athlete_id,["Ride","VirtualRide"])
+	
+	stat.Stat_dist_annual(athlete_id,["Run"])
+	
 	
 run()
 
