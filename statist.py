@@ -237,7 +237,8 @@ class Statist():
 		
 		df['cumul_dist'] = df.groupby(df.index.year)["distance"].cumsum()
 		
-		df["date"] = df.apply(lambda row:  row["date"].replace(year = 1900), axis=1)
+		
+		df["date"] = df.apply(lambda row:  row["date"].replace(year = 1904), axis=1)
 		
 		print("")
 		print("type :",activityType)
