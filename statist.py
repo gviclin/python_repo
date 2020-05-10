@@ -232,8 +232,9 @@ class Statist():
 		df = df[filter]	
 		
 		#df = df[["year","month","date","distance","elapsed_time","moving_time","total_elevation_gain"]]
-		df = df[["year","month","date","distance"]]
-
+		df = df[["year","month","date","distance","id"]]
+		
+		df.id = df.id.astype(int)
 		
 		df.sort_values(by='date', inplace=True, ascending=True)
 		
@@ -243,33 +244,35 @@ class Statist():
 		
 		df["date"] = df.apply(lambda row:  row["date"].replace(year = 1904), axis=1)
 		
-		df = df[["year","month","date","cumul_dist"]]
+		df = df[["year","month","date","cumul_dist","distance","id"]]
 		
 		#distance goal
+		strGoal =   f"Goal : {dist_goal} km"
 		dt_goal = pd.date_range(datetime.datetime(1904, 1, 1,0,0,0), periods=365, freq='D')
 		ts = pd.Series(range(len(dt_goal)), index=dt_goal)
 		frame = { 'cumul_dist': ts } 
 		result = pd.DataFrame(frame) 
 		result["cumul_dist"] = result.apply(lambda row:  dist_goal * row["cumul_dist"] / 364, axis=1)
+		#result["distance"] = result.apply(lambda row:  dist_goal / 364, axis=1)
 		result.reset_index(inplace=True)
 		result['month'] = pd.DatetimeIndex(result['index']).month		
 		result['month'] = result['month'].apply(str)
-		result['year'] = f"Goal : {dist_goal} km"
+		result['year'] = strGoal
+		result['id'] = 0
 		
 		result.rename({'index': 'date'}, axis=1, inplace=True)
 		result.set_index(keys="date", inplace=True, drop=False)
 		df = pd.concat([df,result])
 		
-		
-		
-		
 		print("")
 		print("type :",activityType)
 		print(df.info(verbose=True))
 		print(df)
+		
 		#print(tabulate(df, headers='keys', tablefmt='psql'))
 		df.to_html(os.path.join(self.strava_dir, f"temp.html"))
 		
+		# Y axis : distance beetween 2 ticks
 		dtick1 = 100 if "Run" in activityType else 1000
 		
 		fig = px.line(
@@ -277,11 +280,44 @@ class Statist():
 			 x="date",
 			  y="cumul_dist",
 			  line_group="year",
-			  color="year")
+			  color="year",
+			  custom_data=["id","year","distance"],
+			  #hover_name=df["distance"]
+			  #hover_data=["month", "cumul_dist"]
+			  )
+		#All traces	  
+		fig.update_traces(
+			mode="markers+lines",
+			marker=dict(
+				symbol="circle",
+				size=6,
+				line=dict(width=0,
+					color='DarkSlateGrey'
+					)
+				),			
+			line=dict(dash="solid", width=2), # dot, dash, dashdot
+			text = df["year"],
+			hovertemplate = '%{x}<br> %{y:.1f} kms<br>activity %{customdata[2]:.1f} kms<br>link %{customdata[0]}'			
+			)
+			
+		# Only goal trace
+		fig.update_traces(
+			selector=dict(name=strGoal),
+			mode="lines",
+			line=dict(dash="dashdot", width=3), # dot, dash, dashdot
+			hovertemplate = '%{x}<br>%{y:.1f} kms'
+			)
 			
 		fig.update_layout(
 			title=f"Annual {activityType[0]} Statistics",
+			#hovermode="x unified",
 			xaxis_tickformat = '%-d-%b',
+			legend = dict(
+				title="Year :",
+				orientation="v",
+				itemclick ="toggle",
+				itemdoubleclick ="toggleothers"				
+				),
 			xaxis = dict(
 				title = "Month",
 				nticks =12
@@ -294,6 +330,22 @@ class Statist():
 				dtick= dtick1
 			)
 		)	
+		
+		# create our callback function
+		def update_point(trace, points, selector):
+			print("toto")
+			c = list(scatter.marker.color)
+			s = list(scatter.marker.size)
+			for i in points.point_inds:
+				c[i] = '#bae2be'
+				s[i] = 20
+				with f.batch_update():
+					scatter.marker.color = c
+					scatter.marker.size = s
+
+		scatter = fig.data[0]
+
+		#scatter.on_click(update_point)
 			
 
 		fig.show()
