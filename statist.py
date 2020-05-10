@@ -100,7 +100,7 @@ class Statist():
 		df['month'] = df['month'].apply(str)
 		df['year'] = df['year'].apply(str)
 		
-		df.sort_values(by='date', inplace=True)
+		df.sort_values(by='date', inplace=True, ascending=True)
 		
 		df['distance'] = round(df['distance'] / 1000,3)
 		
@@ -216,7 +216,7 @@ class Statist():
 		
 	
 	
-	def Stat_dist_annual(self,athlete_id, activityType):
+	def Stat_dist_annual(self,athlete_id, activityType, dist_goal = 0):
 		""" Compute_the_db 
 		activityType : "Run", "Hike", "VirtualRide", "VirtualRun", "Walk","Ride"
 		Returns
@@ -231,14 +231,37 @@ class Statist():
 		filter = df["type"].isin(activityType)
 		df = df[filter]	
 		
-		df = df[["year","month","date","distance","elapsed_time","moving_time","total_elevation_gain"]]
+		#df = df[["year","month","date","distance","elapsed_time","moving_time","total_elevation_gain"]]
+		df = df[["year","month","date","distance"]]
+
+		
+		df.sort_values(by='date', inplace=True, ascending=True)
 		
 		df.set_index("date",inplace=True, drop=False)
 		
-		df['cumul_dist'] = df.groupby(df.index.year)["distance"].cumsum()
-		
+		df['cumul_dist'] = df.groupby(df.index.year)["distance"].cumsum()		
 		
 		df["date"] = df.apply(lambda row:  row["date"].replace(year = 1904), axis=1)
+		
+		df = df[["year","month","date","cumul_dist"]]
+		
+		#distance goal
+		dt_goal = pd.date_range(datetime.datetime(1904, 1, 1,0,0,0), periods=365, freq='D')
+		ts = pd.Series(range(len(dt_goal)), index=dt_goal)
+		frame = { 'cumul_dist': ts } 
+		result = pd.DataFrame(frame) 
+		result["cumul_dist"] = result.apply(lambda row:  dist_goal * row["cumul_dist"] / 364, axis=1)
+		result.reset_index(inplace=True)
+		result['month'] = pd.DatetimeIndex(result['index']).month		
+		result['month'] = result['month'].apply(str)
+		result['year'] = f"Goal : {dist_goal} km"
+		
+		result.rename({'index': 'date'}, axis=1, inplace=True)
+		result.set_index(keys="date", inplace=True, drop=False)
+		df = pd.concat([df,result])
+		
+		
+		
 		
 		print("")
 		print("type :",activityType)
@@ -266,7 +289,7 @@ class Statist():
 			yaxis = dict(
 				title = "Cumul Km",
 				nticks =20,
-				dtick=100
+				dtick=1000
 			)
 		)	
 			
