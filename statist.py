@@ -247,6 +247,8 @@ class Statist():
 		#print(tabulate(df, headers='keys', tablefmt='psql'))
 		df.to_html(os.path.join(self.strava_dir, f"temp.html"))
 		
+		dtick1 = 100 if "Run" in activityType else 1000
+		
 		fig = px.line(
 			df,
 			 x="date",
@@ -255,7 +257,7 @@ class Statist():
 			  color="year")
 			
 		fig.update_layout(
-			title=f"Annual {'_'.join(activityType)} Statistics",
+			title=f"Annual {activityType[0]} Statistics",
 			xaxis_tickformat = '%-d-%b',
 			xaxis = dict(
 				title = "Month",
@@ -266,7 +268,7 @@ class Statist():
 			yaxis = dict(
 				title = "Cumul Km",
 				nticks =20,
-				dtick=100
+				dtick= dtick1
 			)
 		)	
 			
