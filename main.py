@@ -62,9 +62,10 @@ def run():
 	
 	#stat.Stat_dist_by_month(athlete_id,["Run"])
 	stat.Stat_dist_by_month(athlete_id,["Ride","VirtualRide"])
-	
-	#stat.Stat_dist_annual(athlete_id,["Run"])
-	#stat.Stat_dist_annual(athlete_id,["Ride","VirtualRide"])
+
+	stat.Stat_dist_annual(athlete_id,["Run"],1600)
+	stat.Stat_dist_annual(athlete_id,["Ride","VirtualRide"],7000)
+
 	
 run()
 
