@@ -55,20 +55,14 @@ def run():
 	act.retreive_strava_activities(startDate, endDate)	
 
 	athlete = act.getAthlete()
-	#print(athlete)
-	print("athlete : id " + str(athlete["id"]) + ", " + athlete["firstname"] + " " + athlete["lastname"] + " from " + athlete["city"] + ", " + str(athlete["weight"]) + "kg")
 
 	stat = Statist(logger)
 	stat.Compute_the_local_db(athlete["id"], startDate, endDate)
 	
-	
-	stat.Stat_dist_by_month(athlete["id"],["Run"])
-	stat.Stat_dist_annual(athlete["id"],["Run"],[1400,1600])
-	#stat.Stat_dist_annual(athlete["id"],["Run"],[600,700])
-	'''
 	stat.Stat_dist_by_month(athlete["id"],["Ride","VirtualRide"])
 	stat.Stat_dist_annual(athlete["id"],["Ride","VirtualRide"],[6000,7000])
-	'''
+	
+	wait = input("PRESS ENTER TO CONTINUE.")
 	
 run()
 

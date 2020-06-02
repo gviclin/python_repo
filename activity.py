@@ -53,10 +53,12 @@ class Activity():
 				print("Issue with the token!!!")
 				quit()
 		
-		#print ("athlete :", str(self.athlete))
 
 		# Dump athlete into a JSON friendly dict (e.g. all datetimes are converted into iso8601)
 		athlete_dict = self.athlete.to_dict()
+		
+		print("athlete : id " + str(athlete_dict["id"]) + ", " + athlete_dict["firstname"] + " " + athlete_dict["lastname"] + " from " + athlete_dict["city"] + ", " + str(athlete_dict["weight"]) + "kg")
+
 
 		# Store athlete infor as a JSON locally (~/.stravadata/athlete_<id>.json)
 		# i.e. C:\Users\gaelv\.stravadata\athlete_134706.json
@@ -115,10 +117,9 @@ class Activity():
 		list_activities = self.client.get_logged_in_athlete_activities(after=startdate,before=startbefore, page=0,per_page =100 )
 		
 		pp = pprint.PrettyPrinter(indent=4)
-		#pp.pprint(list_activities[0])
-					
+		#pp.pprint(list_activities[0])					
 
-		print("startdate list_activities : ", len(list_activities), " elements")
+		#print("startdate list_activities : ", len(list_activities), " elements")
 	
 		strava_dir = dir_stravadata()
 		athlete_id = self.athlete.id
