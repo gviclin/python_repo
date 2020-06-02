@@ -14,6 +14,7 @@ import numpy as np
 
 import datetime
 import time
+from datetime import timedelta  
 
 from critical_power import CriticalPower
 from activity import Activity
@@ -46,26 +47,28 @@ def run():
 	#cp.show_plot(df)'''
 
 	
-	'''act = Activity()
-	annee = 2020
-	month=1
-	startdate = datetime.datetime(annee,month, 1, 1,1,1)
-	startbefore = datetime.datetime.now()
-	act.retreive_strava_activities(startdate, startbefore)'''
-	
-	athlete_id = 134706
+	act = Activity()
 
+	endDate = datetime.datetime.now() +  timedelta(hours=24) 
+	#startDate = startbefore - timedelta(days=31*12*15)
+	startDate = endDate - timedelta(days=31)
+	act.retreive_strava_activities(startDate, endDate)	
+
+	athlete = act.getAthlete()
+	#print(athlete)
+	print("athlete : id " + str(athlete["id"]) + ", " + athlete["firstname"] + " " + athlete["lastname"] + " from " + athlete["city"] + ", " + str(athlete["weight"]) + "kg")
 
 	stat = Statist(logger)
-	#stat.Compute_the_local_db(athlete_id)
+	stat.Compute_the_local_db(athlete["id"], startDate, endDate)
 	
 	
-	#stat.Stat_dist_by_month(athlete_id,["Run"])
-	#stat.Stat_dist_by_month(athlete_id,["Ride","VirtualRide"])
-
-	stat.Stat_dist_annual(athlete_id,["Run"],1600)
-	#stat.Stat_dist_annual(athlete_id,["Ride","VirtualRide"],7000)
-
+	stat.Stat_dist_by_month(athlete["id"],["Run"])
+	stat.Stat_dist_annual(athlete["id"],["Run"],[1400,1600])
+	#stat.Stat_dist_annual(athlete["id"],["Run"],[600,700])
+	'''
+	stat.Stat_dist_by_month(athlete["id"],["Ride","VirtualRide"])
+	stat.Stat_dist_annual(athlete["id"],["Ride","VirtualRide"],[6000,7000])
+	'''
 	
 run()
 

@@ -40,7 +40,18 @@ class Activity():
 		# Returns a stravaio.Athlete object that wraps the
 		# [Strava DetailedAthlete](https://developers.strava.com/docs/reference/#api-models-DetailedAthlete)
 		# with few added data-handling methods
+		
 		self.athlete = self.client.get_logged_in_athlete()
+		
+		if self.athlete is None:
+			os.remove("access_token")
+			#wait = input("PRESS ENTER TO CONTINUE.")
+			access_token = self.read_file_token()
+			self.client = StravaIO(access_token=access_token)
+			self.athlete = self.client.get_logged_in_athlete()
+			if self.athlete is None:
+				print("Issue with the token!!!")
+				quit()
 		
 		#print ("athlete :", str(self.athlete))
 
@@ -86,6 +97,8 @@ class Activity():
 		#print ('STRAVA_ACCESS_TOKEN : ' + str (token))
 		return token
 		
+	def getAthlete(self):
+		return self.athlete.to_dict()
 
 	def retreive_strava_activities(self, startdate, startbefore):
 		"""Get activitiesfrom activity ID
@@ -94,7 +107,7 @@ class Activity():
 		-------
 		activity: dataframe object
 		"""
-		print("from", startdate.strftime("%Y-%m-%d"), "to", startbefore.strftime("%Y-%m-%d"))
+		print("Retreive strava activities from", startdate.strftime("%Y-%m-%d %H:%M:%S"), "to", startbefore.strftime("%Y-%m-%d %H:%M:%S"))
 		
 		# Get list of athletes activities since a given date (after) given in a human friendly format.
 		# Kudos to [Maya: Datetimes for Humans(TM)](https://github.com/kennethreitz/maya)
@@ -114,6 +127,11 @@ class Activity():
 			os.mkdir(activities_dir)
 		
 		streams = []
+		
+		# Remove all files from dir "summary_activities_{athlete_id}"
+		files = glob.glob(activities_dir + '/*')
+		for f in files:
+			os.remove(f)
 		 
 		# Obvious use - store all activities locally
 		for a in list_activities:
