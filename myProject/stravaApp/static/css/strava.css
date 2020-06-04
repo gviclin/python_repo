@@ -103,7 +103,8 @@
 
 .content {
     margin-left: 40px;
-
+	width:1440px;
+	height:900px;
 }
 
 h1, h2, h3, h4 {

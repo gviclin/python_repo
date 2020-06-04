@@ -4,7 +4,9 @@
     <div class="post">
         <!--h1>year progression</h1-->
         <p>
-		todo
+		  {% autoescape off %}
+		  {{ plot_div }}
+		  {% endautoescape %}
 		</p>
     </div>
 {% endblock %}

@@ -211,7 +211,7 @@ class Statist():
 		
 		df_dist.drop('month',inplace=True,axis=1)
 		
-		os.remove(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.xlsx"))
+		#os.remove(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.xlsx"))
 		
 		df_dist.to_parquet(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.parquet"))
 		df_dist.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.html"))
@@ -304,7 +304,7 @@ class Statist():
 		print(df)
 		
 		#print(tabulate(df, headers='keys', tablefmt='psql'))
-		df.to_html(os.path.join(self.strava_dir, f"temp.html"))
+		#df.to_html(os.path.join(self.strava_dir, f"temp.html"))
 		
 		# Y axis : distance beetween 2 ticks
 		dtick1 = 100 if "Run" in activityType else 1000
@@ -381,9 +381,10 @@ class Statist():
 		scatter = fig.data[0]
 
 		#scatter.on_click(update_point)
-			
+		
+		#df.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_annual_distance_{athlete_id}.xlsx"))
 
-		fig.show()
+		#fig.show()
 		
 		
 		'''fig = df.iplot(asFigure=True, xTitle="Month",
@@ -391,5 +392,5 @@ class Statist():
 		mode = "lines")
 		fig.show()'''
 	
-		return 
+		return df
 		
