@@ -65,7 +65,10 @@ def run():
 	
 	wait = input("PRESS ENTER TO CONTINUE.")
 	
-run()
+
+
+if __name__ == "__main__":
+	run()
 
 
 
