@@ -4,10 +4,6 @@ import os
 
 import logging
 
-# insert at 1, 0 is the script path (or '' in REPL)
-sys.path.insert(1, os.getcwd()+"/stravaio")
-
-#sys.path.append('./')
 
 import pandas as pd
 import numpy as np
@@ -20,7 +16,7 @@ from critical_power import CriticalPower
 from activity import Activity
 from statist import Statist
 
-def run():	
+def getStatByMonth():	
 	# create logger
 	logger = logging.getLogger('')
 	logger.setLevel(logging.DEBUG)
@@ -45,25 +41,19 @@ def run():
 	# Get critical power matrix
 	df = cp.get_cp_list_by_id(3412908429)
 	#cp.show_plot(df)'''
-
 	
-	act = Activity()
-
-	endDate = datetime.datetime.now() +  timedelta(hours=24) 
-	#startDate = startbefore - timedelta(days=31*12*15)
-	startDate = endDate - timedelta(days=31)
-	act.retreive_strava_activities(startDate, endDate)	
-
-	athlete = act.getAthlete()
+	athlete_id = 134706
 
 	stat = Statist(logger)
-	stat.Compute_the_local_db(athlete["id"], startDate, endDate)
 	
-	stat.Stat_dist_by_month(athlete["id"],["Ride","VirtualRide"])
-	stat.Stat_dist_annual(athlete["id"],["Ride","VirtualRide"],[6000,7000])
+	return stat.Stat_dist_by_month(athlete_id,["Run"])
+	#stat.Stat_dist_annual(athlete_id,["Run"],[1400,1600])
+	#stat.Stat_dist_annual(athlete["id"],["Run"],[600,700])	
 	
-	wait = input("PRESS ENTER TO CONTINUE.")
+	#wait = input("PRESS ENTER TO CONTINUE.")
 	
+
+
 if __name__ == "__main__":
 	run()
 

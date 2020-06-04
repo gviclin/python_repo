@@ -170,9 +170,10 @@ class Statist():
 		
 		df_by_month["avg_speed"] = round(3600 * df_by_month["distance"] / df_by_month["moving_time"],1)
 		df_by_month["avg_elev_by_10km"] = round(10 * df_by_month["total_elevation_gain"] / df_by_month["distance"],0)
-		
+		'''
 		df_by_month.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_by_month_{athlete_id}.html"))
 		df_by_month.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_by_month_{athlete_id}.xlsx"))
+		'''
 		#print(tabulate(df, headers='keys', tablefmt='psql'))
 		#pp.pprint(file_data)		
 		#print(df.dtypes)
@@ -208,15 +209,16 @@ class Statist():
 		df_dist.set_index("month_str",inplace=True)
 		df_dist.loc["Total"] = df_dist.sum()
 		
+		df_dist.to_parquet(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.parquet"))
 		df_dist.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.html"))
 		df_dist.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.xlsx"))
-		
+		'''
 		print("")
 		print("type :",activityType)
 		print(df_dist.info(verbose=True))
 		#print(df_dist)
 		print(tabulate(df_dist, headers='keys', tablefmt='psql'))
-		'''
+		
 		series_x = df_dist["month_str"]
 		df_dist.drop("month", axis=1,inplace=True)
 		list_month = list(df_dist.columns)
@@ -239,6 +241,8 @@ class Statist():
 		plt.show()'''
 		
 		#self.logger.debug("end of stat_by_year")
+		
+		return df_dist
 		
 	
 	

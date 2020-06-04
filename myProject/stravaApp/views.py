@@ -15,11 +15,12 @@ import cv2
 import cufflinks as cf
 import plotly.express as px
 
-#from ..main_ride import run
+from main_django import getStatByMonth
 
 # Create your views here.
 def main(request):
-
+	#print (settings.BASE_DIR)	
+	#print(sys.path)
 	'''f_name = os.path.join(f"C:/Users/gaelv/.stravadata", f"global_data_134706.parquet")
 	
 	#print (f_name)
@@ -29,11 +30,11 @@ def main(request):
 	
 	print("")
 	
-	#run()
+	df = getStatByMonth
 	
-	#print (settings.BASE_DIR)
+	print (df)
 	
-	print(sys.path)
+
 
 	'''return HttpResponse("""
         <h1>Bienvenue sur mon blog !</h1>
