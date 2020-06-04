@@ -1,14 +1,16 @@
 {% load static %}
-{% load sitetree %}
 
 <html>
+	<style>
+
+</style>
     <head>
 	    <title>Statistics</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		
         <link href='//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
 				
-		<link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">	
+
 				
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
         <!--link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"-->
@@ -18,19 +20,19 @@
     </head>
 	<body>
 		<div class="page-header">
-			{% sitetree_menu from "mainmenu" include "trunk,topmenu" template "menu.html"%}
+			<div class="topnav">
+				<a {% if actif == 1 %}class="active"{% endif %} href="{% url 'viewByMonth' %}">By month</a>
+				<a {% if actif == 2 %}class="active"{% endif %} href="{% url 'viewYearProgression' %}">Year progression</a>
+			<div class="topnav-right">
+				<a {% if actif == 3 %}class="active"{% endif %}href="#">Login</a>
+			</div>
 			<!--h1><a href="/">Statistics</a></h1-->
 
 		</div>
-		<div class="content container">
-			<div class="row">
-				<div class="col-md-8">
-				{% block content %}
-				{% endblock %}
-				</div>
-			</div>
+		<div class="content">
+			{% block content %}
+			{% endblock %}
 		</div>
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-	    <script src="/static/bootstrap/js/bootstrap.min.js"></script>
 	</body>
+</div>
 </html>

@@ -39,6 +39,8 @@ def viewByMonth(request):
 	
 	html = df.to_html()
 	
+	actif = 1
+	
 	'''return HttpResponse("""
         <h1>Bienvenue sur mon blog !</h1>
         <p>Les crêpes bretonnes ça tue des mouettes en plein vol !</p>
@@ -82,8 +84,7 @@ def viewYearProgression(request):
 		
 	layout = go.Layout(
 		title="Cumulative km",
-		width=1300,
-		height=650,
+		autosize=True,
 		legend = dict(
 			title="Year :",
 			orientation="v",
@@ -108,8 +109,9 @@ def viewYearProgression(request):
 		include_plotlyjs=False,
 		output_type='div')
 
+	actif = 2
 	
-	return render(request, "byYearStrava.html", context={'plot_div': plot_div})
+	return render(request, "byYearStrava.html", locals())
 '''
 	return HttpResponse("""
         <h1>Bienvenue sur mon blog !</h1>
