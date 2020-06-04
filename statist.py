@@ -209,6 +209,10 @@ class Statist():
 		df_dist.set_index("month_str",inplace=True)
 		df_dist.loc["Total"] = df_dist.sum()
 		
+		df_dist.drop('month',inplace=True,axis=1)
+		
+		os.remove(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.xlsx"))
+		
 		df_dist.to_parquet(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.parquet"))
 		df_dist.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.html"))
 		df_dist.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.xlsx"))

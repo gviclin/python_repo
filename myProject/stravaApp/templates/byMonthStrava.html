@@ -1,0 +1,12 @@
+{% extends 'baseStrava.html' %}
+
+{% block content %}
+    <div class="post">
+        <!--h1>by month</h1-->
+        <p>
+		{% autoescape off %}
+		{{html}}
+		{% endautoescape %}
+		</p>
+    </div>
+{% endblock %}

@@ -18,7 +18,7 @@ import plotly.express as px
 from main_django import getStatByMonth
 
 # Create your views here.
-def main(request):
+def viewByMonth(request):
 	#print (settings.BASE_DIR)	
 	#print(sys.path)
 	'''f_name = os.path.join(f"C:/Users/gaelv/.stravadata", f"global_data_134706.parquet")
@@ -30,14 +30,23 @@ def main(request):
 	
 	print("")
 	
-	df = getStatByMonth
+	df = getStatByMonth()
 	
 	print (df)
 	
-
-
+	html = df.to_html()
+	
 	'''return HttpResponse("""
         <h1>Bienvenue sur mon blog !</h1>
         <p>Les crêpes bretonnes ça tue des mouettes en plein vol !</p>
     """)'''
-	return render(request, 'mainStrava.html', {})
+	return render(request, 'byMonthStrava.html', locals() )
+	
+def viewYearProgression(request):
+	
+	html = ""
+
+	return render(request, 'byYearStrava.html', locals() )
+	
+	
+	

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 	'myApp',
 	'stravaApp',
+	'sitetree',
 ]
 
 MIDDLEWARE = [

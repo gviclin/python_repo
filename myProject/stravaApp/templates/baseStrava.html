@@ -1,15 +1,26 @@
 {% load static %}
+{% load sitetree %}
+
 <html>
     <head>
-        <title>Main page</title>
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+	    <title>Statistics</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
         <link href='//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
-        <link rel="stylesheet" href="{% static 'css/strava.css' %}">
+				
+		<link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">	
+				
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <!--link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"-->
+		<link rel="stylesheet" href="{% static 'css/strava.css' %}">
+
+
     </head>
 	<body>
 		<div class="page-header">
-			<h1><a href="/">Main page</a></h1>
+			{% sitetree_menu from "mainmenu" include "trunk,topmenu" template "menu.html"%}
+			<!--h1><a href="/">Statistics</a></h1-->
+
 		</div>
 		<div class="content container">
 			<div class="row">
@@ -19,5 +30,7 @@
 				</div>
 			</div>
 		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	    <script src="/static/bootstrap/js/bootstrap.min.js"></script>
 	</body>
 </html>
