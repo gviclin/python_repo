@@ -1,11 +1,12 @@
 {% extends 'baseStrava.html' %}
 
 {% block content %}
-    <div class="post">
+    <div class="class1">
         <!--h1>by month</h1-->
         <p>
 		{% autoescape off %}
 		{{html}}
+		activityType {{activityType}}
 		{% endautoescape %}
 		</p>
     </div>

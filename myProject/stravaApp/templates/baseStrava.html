@@ -12,23 +12,41 @@
 				
 
 				
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-        <!--link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"-->
+        <!--link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"-->
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 		<link rel="stylesheet" href="{% static 'css/strava.css' %}">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
 		<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     </head>
 	<body>
 		<div class="page-header">
 			<div class="topnav">
-				<a {% if actif == 1 %}class="active"{% endif %} href="{% url 'viewByMonth' %}">By month</a>
-				<a {% if actif == 2 %}class="active"{% endif %} href="{% url 'viewYearProgression' %}">Year progression</a>
+				<a {% if actif == 1 %}class="active"{% endif %} href="{% url 'viewByMonth' %}" id="monthLink">By month</a>
+				<a {% if actif == 2 %}class="active"{% endif %} href="{% url 'viewYearProgression' %}" id="yearLink">Year progression</a>
 			<div class="topnav-right">
-				<a {% if actif == 3 %}class="active"{% endif %}href="#">Login</a>
+				<a {% if actif == 3 %}class="active"{% endif %}href="{% url 'viewLogin' %}" id="loginLink">Login</a>
 			</div>
 			<!--h1><a href="/">Statistics</a></h1-->
-
+			
+			<!-- checkbox list-->
 		</div>
+		<div class="cb">
+			<div class="row">
+				<div class="col">
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="Run" id="run">
+						<label class="form-check-label" for="run">Run</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="Ride" id="ride">
+						<label class="form-check-label" for="ride">Ride</label>
+					</div>
+				</div>
+			</div>
+		</div>
+		
 		<div class="content">
 			{% block content %}
 			{% endblock %}
@@ -36,3 +54,33 @@
 	</body>
 </div>
 </html>
+
+<script type='text/javascript'>
+ $(document).ready(function(){
+ 
+	$("#run").change(function(){
+		var checked = $(this).is(':checked'); // Checkbox state
+		if (checked) {
+			// Do stuff
+			//alert("check run");		
+			//document.querySelector('#loginLink').click(); 
+			$.get("http://127.0.0.1:8000/strava/byMonth/", { actType:"run"}, function( data ) {
+			  $( ".result" ).html( data );
+			  //alert( "Load was performed." );
+			});
+		}
+	});
+
+	$("#ride").change(function(){
+		var checked = $(this).is(':checked'); // Checkbox state
+		if (checked) {
+			// Do stuff
+			$.get("http://127.0.0.1:8000/strava/byMonth/", { actType:"ride"}, function( data ) {
+			  $( ".result" ).html( data );
+			  //alert( "Load was performed." );
+			});
+		}
+	});
+
+ });
+ </script>
