@@ -154,6 +154,11 @@ class Statist():
 		-------
 		Make stat by month and activity type
 		"""
+		
+		f = open("log.txt", "w")
+		f.write(str(activityType))
+		f.close()
+		
 		# Read global data file
 		f_name = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")
 		df = pd.read_parquet(f_name)
@@ -297,11 +302,11 @@ class Statist():
 			result.rename({'index': 'date'}, axis=1, inplace=True)
 			result.set_index(keys="date", inplace=True, drop=False)			
 			df = pd.concat([df,result])
-		
+		'''
 		print("")
 		print("type :",activityType)
 		print(df.info(verbose=True))
-		print(df)
+		print(df)'''
 		
 		#print(tabulate(df, headers='keys', tablefmt='psql'))
 		#df.to_html(os.path.join(self.strava_dir, f"temp.html"))
@@ -391,6 +396,13 @@ class Statist():
 		yTitle="Distance", title="Annual statistics", x="dt",y="cumul_dist",
 		mode = "lines")
 		fig.show()'''
+		
+		'''filter = df["year"] == "2020"
+		df = df[filter]	'''
+		
+		print("gvi :")
+		print (df)
 	
+			
 		return df
 		

@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect,JsonResponse
 from django.conf import settings
 
 import os
@@ -11,6 +11,7 @@ import json
 import glob
 import pandas as pd
 import numpy as np
+import re
 
 import plotly.express as px
 import plotly.graph_objs as go
@@ -20,11 +21,52 @@ import plotly.offline as offline
 from main_django import getStatByMonth
 from main_django import getStatAnnual
 
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def post_ajax(request):
+	activityType = "No value"
+	statType = "No value"
+	response = {"log":"No log"}
+	html = ""
+	listType = []
+	
+	if request.method == "POST":
+		if 'activityType' in request.POST:
+			activityType = request.POST['activityType']	
+			response["log"]  = "Activity type : <" + activityType + ">"
+		if 'statType' in request.POST:
+			statType = request.POST['statType']	
+			response["log"]  = response["log"] + " Stat type : <" + statType  +">"
+		
+	if statType=="month":
+		if activityType=="run":
+			listType.append("Run")
+		elif activityType=="ride":
+			listType.append("Ride")
+			listType.append("VirtualRide")
+			
+		df = getStatByMonth(listType)
+		html = 	df.to_html()
+			
+	elif statType=="year":
+		if activityType=="run":
+			listType.append("Run")
+		elif activityType=="ride":
+			listType.append("Ride")
+			listType.append("VirtualRide")
+			
+		html = generateGraph(listType)		
+		
+	response["data"] = html
+
+	return JsonResponse(response, status = 200)
+	
+
 # Create your views here.
 def viewLogin(request):
 	actif = 3
 	
-
 	
 	#url = request.path
 	#Get param :
@@ -41,10 +83,10 @@ def viewLogin(request):
 		return HttpResponseRedirect("http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://127.0.0.1:8000/strava/login/&approval_prompt=force&scope=read,activity:read_all")
 
 
-	
-	
+
 	
 def viewByMonth(request):
+	actif = 1
 	#print (settings.BASE_DIR)	
 	#print(sys.path)
 	'''f_name = os.path.join(f"C:/Users/gaelv/.stravadata", f"global_data_134706.parquet")
@@ -61,13 +103,13 @@ def viewByMonth(request):
 		activityType = request.session.get('activityType', "run")
 		print("")
 		
-		df = getStatByMonth()
+		#df = getStatByMonth()
 		
-		print (df)
+		#print (df)
 		
-		html = df.to_html()
+		html = 	None#df.to_html()
 		
-		actif = 1
+
 		
 		'''return HttpResponse("""
 			<h1>Bienvenue sur mon blog !</h1>
@@ -76,9 +118,16 @@ def viewByMonth(request):
 	return render(request, 'byMonthStrava.html', locals() )
 	
 def viewYearProgression(request):
+	actif = 2
+	#plot_div = generateGraph(["run"])
+
+	return render(request, "byYearStrava.html", locals())
+
+	
+def generateGraph(list):
 	html = ""
 	
-	df = getStatAnnual()
+	df = getStatAnnual(list)
 	
 	listLines = df["year"].unique()
 	
@@ -136,14 +185,21 @@ def viewYearProgression(request):
 		include_plotlyjs=False,
 		output_type='div')
 
-	actif = 2
+	# bidouille pour créer une fonction de creation du plot
+	'''plot_div = re.sub(
+		r'window.PLOTLYENV=window.PLOTLYENV',
+		r'\r	function displayPlot() {\r		window.PLOTLYENV=window.PLOTLYENV',
+		plot_div)   
+		
+	plot_div = re.sub(
+		r' }',
+		r' }\r}\r	displayPlot()',
+		plot_div)'''
+		
+		
 	
-	return render(request, "byYearStrava.html", locals())
-'''
-	return HttpResponse("""
-        <h1>Bienvenue sur mon blog !</h1>
-        <p>Les crêpes bretonnes ça tue des mouettes en plein vol !</p>
-    """)
-	'''
+
+	return plot_div
 	
+
 

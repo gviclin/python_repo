@@ -16,7 +16,7 @@ from critical_power import CriticalPower
 from activity import Activity
 from statist import Statist
 
-def getStatByMonth():	
+def getStatByMonth(list):	
 	# create logger
 	logger = logging.getLogger('')
 	logger.setLevel(logging.DEBUG)
@@ -25,10 +25,11 @@ def getStatByMonth():
 
 	athlete_id = 134706
 	
-	return stat.Stat_dist_by_month(athlete_id,["Run"])	
+	return stat.Stat_dist_by_month(athlete_id,list)	
+	
 	#wait = input("PRESS ENTER TO CONTINUE.")
 	
-def getStatAnnual():	
+def getStatAnnual(list):	
 	# create logger
 	logger = logging.getLogger('')
 	logger.setLevel(logging.DEBUG)
@@ -37,7 +38,7 @@ def getStatAnnual():
 	
 	athlete_id = 134706
 	
-	return stat.Stat_dist_annual(athlete_id,["Run"],[1400,1600])
+	return stat.Stat_dist_annual(athlete_id,list,[1400,1600])
 	#stat.Stat_dist_annual(athlete["id"],["Run"],[600,700])	
 	
 	#wait = input("PRESS ENTER TO CONTINUE.")

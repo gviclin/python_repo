@@ -1,12 +1,18 @@
 {% extends 'baseStrava.html' %}
 
 {% block content %}
-    <div class="class1">
-        <!--h1>year progression</h1-->
-        <p>
-		  {% autoescape off %}
-		  {{ plot_div }}
-		  {% endautoescape %}
-		</p>
-    </div>
+
+{% comment %} 
+ 
+<p>
+	{% autoescape off %}
+
+	{{plot_div}}
+
+	{% endautoescape %}
+</p>
+
+
+ {% endcomment %}
+ 
 {% endblock %}

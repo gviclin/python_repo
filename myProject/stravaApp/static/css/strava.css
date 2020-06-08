@@ -1,6 +1,27 @@
+section {
+  /* position is static by default */
+	/*margin: 35px;*/
+	width: auto;
+	height: auto;
+	float: left;
+	padding: 1px;
+	width: 100%;
+	/*background-color: #21f1f1;*/
+	
+}
+
+.log {
+	background-color: lightblue;
+}
+.form-check {
+	/*background-color: blue;*/
+}
 
 .cb {
 	float: left;
+	height: auto;
+	width: auto;
+	/*background-color: lightblue;*/
 }
 
 .page-header {
@@ -16,8 +37,9 @@
 }
 
 .content {
+	/*float: bottom;*/
 	width: auto;
-	height: 80%;
+	height: auto;
 	margin-left: auto;
     margin-right: auto;
 	margin-top: auto;
@@ -36,9 +58,9 @@ h1, h2, h3, h4 {
 }
 
 body {
-    padding-left: 15px;
+    padding-left: 2px;
 	background-color: #E7E7E7; 
-		width: auto;
+	width: auto;
 	height: auto;
 }
 

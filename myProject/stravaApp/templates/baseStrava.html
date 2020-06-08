@@ -3,8 +3,9 @@
 <html>
 	<style>
 
-</style>
+	</style>
     <head>
+		<html lang="en">
 	    <title>Statistics</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		
@@ -28,59 +29,118 @@
 			<div class="topnav-right">
 				<a {% if actif == 3 %}class="active"{% endif %}href="{% url 'viewLogin' %}" id="loginLink">Login</a>
 			</div>
+		</div>
 			<!--h1><a href="/">Statistics</a></h1-->
 			
-			<!-- checkbox list-->
-		</div>
-		<div class="cb">
-			<div class="row">
-				<div class="col">
-					<div class="form-check">
-						<input class="form-check-input" type="checkbox" value="Run" id="run">
-						<label class="form-check-label" for="run">Run</label>
+		<!-- checkbox list-->
+		<section>
+			<div class="cb">
+				<div class="row">
+					<div class="col">
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" value="Run" id="run">
+							<label class="form-check-label" for="run">Run</label>
+						</div>
 					</div>
 					<div class="form-check">
 						<input class="form-check-input" type="checkbox" value="Ride" id="ride">
 						<label class="form-check-label" for="ride">Ride</label>
 					</div>
 				</div>
-			</div>
-		</div>
+			</div> 
+		</section>
 		
-		<div class="content">
-			{% block content %}
-			{% endblock %}
-		</div>
+		<section>
+			<div class="log">
+			<p id="testgv"></p>
+			</div>
+		</section>
+
+		<section>
+			<div class="content" id="id_content">
+				{% block content %}
+				{% endblock %}
+			</div>
+		</section>
+		
 	</body>
-</div>
+
 </html>
 
 <script type='text/javascript'>
+{% if actif == 1 %}sessionStorage.setItem("statType", "month");{% endif %}
+{% if actif == 2 %}sessionStorage.setItem("statType", "year");{% endif %}
+
+
  $(document).ready(function(){
  
 	$("#run").change(function(){
 		var checked = $(this).is(':checked'); // Checkbox state
 		if (checked) {
-			// Do stuff
+			sendPostMessage("run", sessionStorage.getItem("statType"))		
+			
+			//alert("before ajax");	
+			
+			//$("#testgv").prepend("Some prepended text.");
+			
+					
+			
 			//alert("check run");		
-			//document.querySelector('#loginLink').click(); 
-			$.get("http://127.0.0.1:8000/strava/byMonth/", { actType:"run"}, function( data ) {
+			/*document.querySelector('#loginLink').click(); 
+			/*$.get("http://127.0.0.1:8000/strava/byMonth/", { actType:"run"}, function( data ) {
 			  $( ".result" ).html( data );
 			  //alert( "Load was performed." );
-			});
+			});*/	
 		}
 	});
 
 	$("#ride").change(function(){
 		var checked = $(this).is(':checked'); // Checkbox state
 		if (checked) {
-			// Do stuff
-			$.get("http://127.0.0.1:8000/strava/byMonth/", { actType:"ride"}, function( data ) {
-			  $( ".result" ).html( data );
-			  //alert( "Load was performed." );
-			});
+			sendPostMessage("ride", sessionStorage.getItem("statType"))		
 		}
 	});
 
  });
+ 
+ function sendPostMessage(activityType, statType) {
+	// make POST ajax call
+	$.ajax({
+	type: 'POST',
+	url: "{% url 'post_ajax' %}",
+	data: "activityType=" + activityType + ";statType=" + statType,
+	success: function (response) {
+		//alert("ajax ok");	
+		log = response["log"]
+		data = response["data"]
+		//var instance = JSON.parse(response["instance"]);
+		
+		$("#testgv").text(function(i, origText){
+		return log; 
+		});
+		console.log(" data length : " +data.length);
+		
+		
+		$("#id_content").html(data);
+		///document.getElementById("id_content").innerHTML = data;
+
+				
+		/*$("#id_content").find("script").each(function(){
+			eval($(this).text());
+		)};*/
+		
+		if (typeof displayPlot === "function") { 
+			console.log(" displayPlot exists");
+			//displayPlot();
+		}
+		else
+		{
+		console.log(" displayPlot not exists");
+		}
+	
+	}
+	})
+
+  return;
+}
  </script>
