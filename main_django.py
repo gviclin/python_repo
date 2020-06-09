@@ -29,7 +29,7 @@ def getStatByMonth(list):
 	
 	#wait = input("PRESS ENTER TO CONTINUE.")
 	
-def getStatAnnual(list):	
+def getStatAnnual(list,listObjective):	
 	# create logger
 	logger = logging.getLogger('')
 	logger.setLevel(logging.DEBUG)
@@ -38,7 +38,8 @@ def getStatAnnual(list):
 	
 	athlete_id = 134706
 	
-	return stat.Stat_dist_annual(athlete_id,list,[1400,1600])
+	return stat.Stat_dist_annual(athlete_id,list,listObjective)
+	#return stat.Stat_dist_annual(athlete_id,list,[1400,1600])
 	#stat.Stat_dist_annual(athlete["id"],["Run"],[600,700])	
 	
 	#wait = input("PRESS ENTER TO CONTINUE.")

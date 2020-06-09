@@ -40,23 +40,27 @@ def post_ajax(request):
 			response["log"]  = response["log"] + " Stat type : <" + statType  +">"
 		
 	if statType=="month":
-		if activityType=="run":
+		if activityType.find("run")!=-1:
 			listType.append("Run")
-		elif activityType=="ride":
+		if activityType.find("ride")!=-1:
 			listType.append("Ride")
 			listType.append("VirtualRide")
-			
-		df = getStatByMonth(listType)
-		html = 	df.to_html()
+		
+		if len(activityType)>0:
+			df = getStatByMonth(listType)
+			html = 	df.to_html()
 			
 	elif statType=="year":
-		if activityType=="run":
+		if activityType.find("run")!=-1:
+			objList = [1400,1600]
 			listType.append("Run")
-		elif activityType=="ride":
+		if activityType.find("ride")!=-1:
+			objList = [6000,7000]
 			listType.append("Ride")
 			listType.append("VirtualRide")
 			
-		html = generateGraph(listType)		
+		if len(activityType)>0:
+			html = generateGraph(listType, objList)		
 		
 	response["data"] = html
 
@@ -124,10 +128,10 @@ def viewYearProgression(request):
 	return render(request, "byYearStrava.html", locals())
 
 	
-def generateGraph(list):
+def generateGraph(list, objList):
 	html = ""
 	
-	df = getStatAnnual(list)
+	df = getStatAnnual(list, objList)
 	
 	listLines = df["year"].unique()
 	
@@ -135,31 +139,54 @@ def generateGraph(list):
 	for line in listLines:
 		filter = df["year"] == line
 		dfFilter = df[filter]	
-	
-		graph = go.Scatter(
-			x=dfFilter["date"],
-			y=dfFilter["cumul_dist"],
-			name=line,
-			opacity=1,
-			mode="markers+lines",
-			text = line,
-			marker=dict(
-				symbol="circle",
-				size=6,
-				line=dict(width=0,
-					color='DarkSlateGrey'
-					),
-				),			
-			line=dict(dash="solid", width=2), # dot, dash, dashdot
+		
+		# objectif line
+		if line.find("km") != -1:
+			graph = go.Scatter(
+				x=dfFilter["date"],
+				y=dfFilter["cumul_dist"],
+				name=line,
+				opacity=1,
+				mode="lines",
+				line=dict(dash="dashdot", width=3), # dot, dash, dashdot
+				text = line,
+				marker=dict(
+					symbol="circle",
+					size=6,
+					line=dict(width=0,
+						color='DarkSlateGrey'
+						),
+				),		
+				hovertemplate = 'Objective : %{data.name}<br>%{x|%d/%m}<br>%{y:.1f} kms<extra></extra>',			
 			)
-		#, marker_color='green')
+		else:
+			# Normal line
+			graph = go.Scatter(
+				x=dfFilter["date"],
+				y=dfFilter["cumul_dist"],
+				customdata=dfFilter["distance"],
+				name=line,
+				opacity=1,
+				mode="markers+lines",
+				text = line,
+				marker=dict(
+					symbol="circle",
+					size=6,
+					line=dict(width=0,
+						color='DarkSlateGrey'
+						),
+				),			
+				line=dict(dash="solid", width=2), # dot, dash, dashdot
+				hovertemplate = '%{x|%d/%m}/%{data.name}<br>%{y:.1f} kms<br>Activity : %{customdata:.1f} kms<extra></extra>',
+				# https://github.com/d3/d3-3.x-api-reference/blob/master/Time-Formatting.md#format
+			)
 		
 		graphList.append(graph)
 		
-	dtick1 = 100
+	dtick1 = 100 if "Run" in list else 1000
 		
 	layout = go.Layout(
-		title="Cumulative km",
+		title="Cumulative km (" + list[0] + ")" ,
 		autosize=True,
 		legend = dict(
 			title="Year :",

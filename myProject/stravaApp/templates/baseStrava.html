@@ -24,11 +24,12 @@
 	<body>
 		<div class="page-header">
 			<div class="topnav">
-				<a {% if actif == 1 %}class="active"{% endif %} href="{% url 'viewByMonth' %}" id="monthLink">By month</a>
-				<a {% if actif == 2 %}class="active"{% endif %} href="{% url 'viewYearProgression' %}" id="yearLink">Year progression</a>
+				<a id="monthLink" class="menu_button">By month</a>
+				<a id="yearLink" class="menu_button">Year progression</a>
+			
 			<div class="topnav-right">
-				<a {% if actif == 3 %}class="active"{% endif %}href="{% url 'viewLogin' %}" id="loginLink">Login</a>
-			</div>
+				<a id="loginLink" class="menu_button" href="{% url 'viewLogin' %}">Login</a>
+			</div></div>
 		</div>
 			<!--h1><a href="/">Statistics</a></h1-->
 			
@@ -50,11 +51,11 @@
 			</div> 
 		</section>
 		
-		<section>
+		<!--section>
 			<div class="log">
 			<p id="testgv"></p>
 			</div>
-		</section>
+		</section-->
 
 		<section>
 			<div class="content" id="id_content">
@@ -74,16 +75,34 @@
 
  $(document).ready(function(){
  
+	//$(".menu_button").css("background-color","#ffffff");
+	
+	updateMenu();
+	
+	$("#run").prop("checked", true);
+	
+	//Trigger defaut statType
+	sendPostMessage(GetActivityType(), sessionStorage.getItem("statType"));
+	
+	$('#monthLink').css('cursor', 'pointer'); // 'default' to revert
+	$('#yearLink').css('cursor', 'pointer'); // 'default' to revert
+ 
+ 	$("#monthLink").click(function(){
+		sessionStorage.setItem("statType", "month");
+		sendPostMessage(GetActivityType(), "month");
+		updateMenu();
+	});
+	
+	$("#yearLink").click(function(){
+		sessionStorage.setItem("statType", "year");
+		sendPostMessage(GetActivityType(), "year");	
+		updateMenu();
+	});
+ 
 	$("#run").change(function(){
-		var checked = $(this).is(':checked'); // Checkbox state
-		if (checked) {
-			sendPostMessage("run", sessionStorage.getItem("statType"))		
+			$("#ride").prop("checked", false);
 			
-			//alert("before ajax");	
-			
-			//$("#testgv").prepend("Some prepended text.");
-			
-					
+			sendPostMessage(GetActivityType(), sessionStorage.getItem("statType"));
 			
 			//alert("check run");		
 			/*document.querySelector('#loginLink').click(); 
@@ -91,56 +110,67 @@
 			  $( ".result" ).html( data );
 			  //alert( "Load was performed." );
 			});*/	
-		}
 	});
 
 	$("#ride").change(function(){
-		var checked = $(this).is(':checked'); // Checkbox state
-		if (checked) {
-			sendPostMessage("ride", sessionStorage.getItem("statType"))		
-		}
+			$("#run").prop("checked", false);
+	
+			sendPostMessage(GetActivityType(), sessionStorage.getItem("statType"))		
 	});
 
  });
  
+ function GetActivityType() {
+	type=[];
+	if ($('#run').is(":checked")) {
+		type.push("run")
+	}
+	if ($('#ride').is(":checked")) {
+		type.push("ride")		
+	}
+	return type
+}
+ 
  function sendPostMessage(activityType, statType) {
 	// make POST ajax call
+	$('html, body').css("cursor", "wait");
 	$.ajax({
-	type: 'POST',
-	url: "{% url 'post_ajax' %}",
-	data: "activityType=" + activityType + ";statType=" + statType,
-	success: function (response) {
-		//alert("ajax ok");	
-		log = response["log"]
-		data = response["data"]
-		//var instance = JSON.parse(response["instance"]);
-		
-		$("#testgv").text(function(i, origText){
-		return log; 
-		});
-		console.log(" data length : " +data.length);
-		
-		
-		$("#id_content").html(data);
-		///document.getElementById("id_content").innerHTML = data;
-
-				
-		/*$("#id_content").find("script").each(function(){
-			eval($(this).text());
-		)};*/
-		
-		if (typeof displayPlot === "function") { 
-			console.log(" displayPlot exists");
-			//displayPlot();
-		}
-		else
-		{
-		console.log(" displayPlot not exists");
-		}
+		type: 'POST',
+		url: "{% url 'post_ajax' %}",
+		data: "activityType=" + activityType + ";statType=" + statType,
+		success: function (response) {
+			//alert("ajax ok");	
+			log = response["log"]
+			data = response["data"]
 	
-	}
+			/*$("#testgv").text(function(i, origText){
+			return log; 
+			});*/
+			
+			//console.log(" data length : " +data.length);			
+			
+			$("#id_content").html(data);
+			///document.getElementById("id_content").innerHTML = data; // dont work !!!
+			
+			$('html, body').css("cursor", "auto");
+				
+		}
 	})
 
   return;
+}
+
+
+ function updateMenu() {
+	if (sessionStorage.getItem("statType") == "month")
+	{
+		$('#monthLink').css('background-color', '#858585');
+		$('#yearLink').css('background-color', '#222');
+	}
+	else if (sessionStorage.getItem("statType") == "year")
+	{
+		$('#yearLink').css('background-color', '#858585');
+		$('#monthLink').css('background-color', '#222');
+	}
 }
  </script>

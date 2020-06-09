@@ -155,10 +155,6 @@ class Statist():
 		Make stat by month and activity type
 		"""
 		
-		f = open("log.txt", "w")
-		f.write(str(activityType))
-		f.close()
-		
 		# Read global data file
 		f_name = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")
 		df = pd.read_parquet(f_name)
@@ -312,7 +308,7 @@ class Statist():
 		#df.to_html(os.path.join(self.strava_dir, f"temp.html"))
 		
 		# Y axis : distance beetween 2 ticks
-		dtick1 = 100 if "Run" in activityType else 1000
+		'''dtick1 = 100 if "Run" in activityType else 1000
 		
 		fig = px.line(
 			df,
@@ -390,7 +386,7 @@ class Statist():
 		#df.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_annual_distance_{athlete_id}.xlsx"))
 
 		#fig.show()
-		
+		'''
 		
 		'''fig = df.iplot(asFigure=True, xTitle="Month",
 		yTitle="Distance", title="Annual statistics", x="dt",y="cumul_dist",
@@ -400,9 +396,7 @@ class Statist():
 		'''filter = df["year"] == "2020"
 		df = df[filter]	'''
 		
-		print("gvi :")
-		print (df)
-	
+
 			
 		return df
 		
