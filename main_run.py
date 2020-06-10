@@ -50,8 +50,8 @@ def run():
 	act = Activity()
 
 	endDate = datetime.datetime.now() +  timedelta(hours=24) 
-	#startDate = startbefore - timedelta(days=31*12*15)
 	startDate = endDate - timedelta(days=31)
+	#startDate = endDate - timedelta(days=31*12*15)
 	act.retreive_strava_activities(startDate, endDate)	
 
 	athlete = act.getAthlete()

@@ -2,16 +2,28 @@ django-admin startproject myProject
 python manage.py startapp myApp
 
 
-winpty python manage.py createsuperuser
-
-python manage.py runserver
+winpty python3 manage.py createsuperuser
 
 # crée la table SQL associée au modèle
-python manage.py makemigrations 
-python manage.py migrate 
+python3 manage.py makemigrations 
+python3 manage.py migrate 
 
-python manage.py dbshell
+python3 manage.py dbshell
 
-python manage.py shell
+python3 manage.py shell
 
-python manage.py collectstatic
+python3 manage.py collectstatic
+
+python3 manage.py runserver
+python3 myProject/manage.py runserver
+
+#nginx
+sudo ufw app list 
+sudo ufw allow 'Nginx HTTP'
+sudo systemctl restart nginx
+systemctl status nginx 
+
+#gunicorn
+gunicorn myProject.wsgi:application
+
+

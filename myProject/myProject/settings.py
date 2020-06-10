@@ -26,7 +26,7 @@ SECRET_KEY = '9k4+xj3$bs@2g=8*m%phf(ogc)(5(%4@n56(f-1)0@^02=t7++'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['mypersonalstat.ddns.net']
 
 
 # Application definition
@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 	'myApp',
 	'stravaApp',
-	'sitetree',
 ]
 
 MIDDLEWARE = [
@@ -126,3 +125,5 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 
 sys.path.insert(0, 'D:\\python\\python_repo')
+sys.path.insert(0, '/home/gv/python_repo')
+sys.path.insert(0, '/home/gv/python_repo/stravaio')

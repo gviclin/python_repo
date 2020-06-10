@@ -18,8 +18,8 @@ from django.contrib import admin
 
 urlpatterns = [
     url('admin/', admin.site.urls),
-	url('strava/', include('stravaApp.urls')),
-	
+	#url('strava/', include('stravaApp.urls')),
+	url(r'', include('stravaApp.urls')),
 	
 	url(r'', include('myApp.urls')),
 ]
