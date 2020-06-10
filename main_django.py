@@ -4,6 +4,7 @@ import os
 
 import logging
 
+sys.path.insert(1, os.getcwd()+"/stravaio")
 
 import pandas as pd
 import numpy as np
@@ -15,6 +16,19 @@ from datetime import timedelta
 from critical_power import CriticalPower
 from activity import Activity
 from statist import Statist
+from activity import Activity
+
+def login(token):
+	act = Activity(token)
+	
+	endDate = datetime.datetime.now() +  timedelta(hours=24) 
+	startDate = endDate - timedelta(days=31)
+	#startDate = endDate - timedelta(days=31*12*15)
+	act.retreive_strava_activities(startDate, endDate)	
+
+	athlete = act.getAthlete()
+	
+	return athlete
 
 def getStatByMonth(list):	
 	# create logger

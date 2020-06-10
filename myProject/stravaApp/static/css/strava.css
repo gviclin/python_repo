@@ -6,8 +6,7 @@ section {
 	float: left;
 	padding: 1px;
 	width: 100%;
-	/*background-color: #21f1f1;*/
-	
+	/*background-color: #21f1f1;*/	
 }
 
 .log {
@@ -29,12 +28,7 @@ section {
 	color: white;	
     margin-top: 0;
     padding: 20px 20px 20px 40px;
-}
-
-.page-header, {
-    color: #ffffff;
-    /*font-size: 36pt;*/
-    text-decoration: none;
+	text-decoration: none;
 }
 
 .content {
@@ -103,7 +97,7 @@ th {
   margin-bottom: 20px;
 }
 
-.topnav a {
+.topnav a ,.topnav-right a{
   float: left;
   color: #f2f2f2;
   text-align: center;
@@ -126,6 +120,7 @@ th {
 
 .topnav-right {
   float: right;
+  color: #f2f2f2;
 }
 
 

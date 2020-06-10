@@ -427,6 +427,7 @@ def run_server_and_wait_for_token(port, client_id, client_secret):
 			}
 			r = requests.post("https://www.strava.com/oauth/token", params)
 			data = r.json()
+			print ("run_server_and_wait_for_token" + str(data))
 			logger.debug(f"Authorized athlete: {data.get('access_token', 'Oeps something went wrong!')}")
 		else:
 			data = url.path.encode()
@@ -470,3 +471,18 @@ def date_to_epoch(date):
 	if rv is None:
 		raise TypeError('date must be epoch int, datetime obj or the string')
 	return rv
+	
+	
+def get_token(port, client_id, client_secret, code):
+	logger.debug(f"get_token: {code}")
+	params = {
+		"client_id": client_id,
+		"client_secret": client_secret,
+		"code": code,
+		"grant_type": "authorization_code"
+	}
+	r = requests.post("https://www.strava.com/oauth/token", params)
+	data = r.json()
+	logger.debug(f"Authorized athlete: {data.get('access_token', 'Oeps something went wrong!')}")
+	
+	return data.get('access_token')

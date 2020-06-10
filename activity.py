@@ -2,6 +2,7 @@ from stravaio import strava_oauth2
 from stravaio import StravaIO
 from stravaio import dir_stravadata
 from stravaio import convert_datetime_to_iso8601
+from stravaio import get_token
 
 import os
 import json
@@ -24,18 +25,25 @@ import pprint
 
 class Activity():
 	
-	def __init__(self):
+	def __init__(self, code = None):
 		# Public identifier for apps
 		self.STRAVA_CLIENT_ID = 9402
 		
 		# Secret known only to the application and the authorization server
 		self.STRAVA_CLIENT_SECRET = "7960741d3c1563506e073c364e71473c5da1405c"
-
-		access_token = self.read_file_token()
+		
+		if code is None: 
+			access_token = self.read_file_token()
+		else:
+			access_token = get_token(
+				port=8000,
+				client_id=self.STRAVA_CLIENT_ID,
+				client_secret=self.STRAVA_CLIENT_SECRET,
+				code=code
+			)
 
 		self.client = StravaIO(access_token=access_token)
-		#print (self.client)		
-		
+				
 		# Get logged in athlete (e.g. the owner of the token)
 		# Returns a stravaio.Athlete object that wraps the
 		# [Strava DetailedAthlete](https://developers.strava.com/docs/reference/#api-models-DetailedAthlete)
@@ -43,15 +51,16 @@ class Activity():
 		
 		self.athlete = self.client.get_logged_in_athlete()
 		
-		if self.athlete is None:
-			os.remove("access_token")
-			#wait = input("PRESS ENTER TO CONTINUE.")
-			access_token = self.read_file_token()
-			self.client = StravaIO(access_token=access_token)
-			self.athlete = self.client.get_logged_in_athlete()
+		if code is None: 
 			if self.athlete is None:
-				print("Issue with the token!!!")
-				quit()
+				os.remove("access_token")
+				#wait = input("PRESS ENTER TO CONTINUE.")
+				access_token = self.read_file_token()
+				self.client = StravaIO(access_token=access_token)
+				self.athlete = self.client.get_logged_in_athlete()
+				if self.athlete is None:
+					print("Issue with the token!!!")
+					quit()
 		
 
 		# Dump athlete into a JSON friendly dict (e.g. all datetimes are converted into iso8601)
@@ -69,6 +78,7 @@ class Activity():
 
 				
 	def read_file_token(self):
+
 		try:
 			myFile = open('access_token','r')
 			
@@ -92,10 +102,7 @@ class Activity():
 		except:
 			print("Unexpected error:", sys.exc_info()[0])
 
-		finally:
-			myFile.close
-			
-		myFile.close
+
 		#print ('STRAVA_ACCESS_TOKEN : ' + str (token))
 		return token
 		

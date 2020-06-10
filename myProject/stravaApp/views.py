@@ -20,6 +20,7 @@ import plotly.offline as offline
 
 from main_django import getStatByMonth
 from main_django import getStatAnnual
+from main_django import login
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -69,8 +70,7 @@ def post_ajax(request):
 
 # Create your views here.
 def viewLogin(request):
-	actif = 3
-	
+	actif = 3	
 	
 	#url = request.path
 	#Get param :
@@ -81,6 +81,8 @@ def viewLogin(request):
 		# Number of visits to this view, as counted in the session variable.
 		num_visits = request.session.get('num_visits', 0)
 		request.session['num_visits'] = num_visits + 1
+		
+		html = login(token)
 		
 		return render(request, 'loginStrava.html', locals() )
 	else:
