@@ -26,7 +26,7 @@ SECRET_KEY = '9k4+xj3$bs@2g=8*m%phf(ogc)(5(%4@n56(f-1)0@^02=t7++'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['mypersonalstat.ddns.net']
+ALLOWED_HOSTS = ['mypersonalstat.ddns.net', '127.0.0.1']
 
 
 # Application definition
