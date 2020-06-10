@@ -15,7 +15,6 @@ python3 manage.py shell
 python3 manage.py collectstatic
 
 python3 manage.py runserver
-python3 myProject/manage.py runserver
 
 #nginx
 sudo ufw app list 
