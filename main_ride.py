@@ -5,7 +5,8 @@ import os
 import logging
 
 # insert at 1, 0 is the script path (or '' in REPL)
-sys.path.insert(1, os.getcwd()+"/stravaio")
+#sys.path.insert(1, os.getcwd()+"\stravaio")
+sys.path.insert(1, "D:\python\python_repo\stravaio")
 
 #sys.path.append('./')
 
@@ -21,6 +22,12 @@ from activity import Activity
 from statist import Statist
 
 def run():	
+	'''
+	# Show python path
+	for p in sys.path:
+		print(" - " + p)
+	return'''
+	
 	# create logger
 	logger = logging.getLogger('')
 	logger.setLevel(logging.DEBUG)

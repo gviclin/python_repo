@@ -2,7 +2,8 @@ from stravaio import strava_oauth2
 from stravaio import StravaIO
 from stravaio import dir_stravadata
 from stravaio import convert_datetime_to_iso8601
-from stravaio import get_token
+from stravaio import get_access_token
+from stravaio import deauthorize
 
 import os
 import json
@@ -23,26 +24,32 @@ import time
 
 import pprint 
 
+def actDeauthorize(access_token):
+		deauthorize(access_token)
+
 class Activity():
 	
-	def __init__(self, code = None):
+	def __init__(self, user_token = None):
+		#access_token
+		self.ACCESS_TOKEN = None
+	
 		# Public identifier for apps
 		self.STRAVA_CLIENT_ID = 9402
 		
 		# Secret known only to the application and the authorization server
 		self.STRAVA_CLIENT_SECRET = "7960741d3c1563506e073c364e71473c5da1405c"
 		
-		if code is None: 
-			access_token = self.read_file_token()
+		if user_token is None: 
+			self.ACCESS_TOKEN = self.read_file_token()
 		else:
-			access_token = get_token(
+			self.ACCESS_TOKEN = get_access_token(
 				port=8000,
 				client_id=self.STRAVA_CLIENT_ID,
 				client_secret=self.STRAVA_CLIENT_SECRET,
-				code=code
+				user_token=user_token
 			)
 
-		self.client = StravaIO(access_token=access_token)
+		self.client = StravaIO(access_token=self.ACCESS_TOKEN)
 				
 		# Get logged in athlete (e.g. the owner of the token)
 		# Returns a stravaio.Athlete object that wraps the
@@ -51,12 +58,12 @@ class Activity():
 		
 		self.athlete = self.client.get_logged_in_athlete()
 		
-		if code is None: 
+		if user_token is None: 
 			if self.athlete is None:
 				os.remove("access_token")
 				#wait = input("PRESS ENTER TO CONTINUE.")
 				access_token = self.read_file_token()
-				self.client = StravaIO(access_token=access_token)
+				self.client = StravaIO(access_token=self.ACCESS_TOKEN)
 				self.athlete = self.client.get_logged_in_athlete()
 				if self.athlete is None:
 					print("Issue with the token!!!")
@@ -75,8 +82,8 @@ class Activity():
 
 		# Get locally stored athletes (returns a generator of dicts)
 		#local_athletes = client.local_athletes()
-
-				
+		
+			
 	def read_file_token(self):
 
 		try:
@@ -180,6 +187,6 @@ class Activity():
 		else:
 			return False
 
-		
+	
 
 

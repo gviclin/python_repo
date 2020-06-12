@@ -473,16 +473,27 @@ def date_to_epoch(date):
 	return rv
 	
 	
-def get_token(port, client_id, client_secret, code):
-	logger.debug(f"get_token: {code}")
+def get_access_token(port, client_id, client_secret, user_token):
+	logger.debug(f"get_access_token from user token <" + user_token + ">")
 	params = {
 		"client_id": client_id,
 		"client_secret": client_secret,
-		"code": code,
+		"code": user_token,
 		"grant_type": "authorization_code"
 	}
 	r = requests.post("https://www.strava.com/oauth/token", params)
 	data = r.json()
-	logger.debug(f"Authorized athlete: {data.get('access_token', 'Oeps something went wrong!')}")
+	logger.debug(f"get_access_token result : <"  + data.get('access_token', 'Oeps something went wrong!') + ">")
 	
 	return data.get('access_token')
+	
+def deauthorize(access_token):
+	logger.debug(f"deauthorize token <" + access_token + ">")
+	params = {
+		"access_token": access_token
+	}
+	r = requests.post("https://www.strava.com/oauth/deauthorize", params)
+	data = r.json()
+	logger.debug(f"deauthorize result : {str(data)}")
+	
+	return

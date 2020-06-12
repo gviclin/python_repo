@@ -4,8 +4,6 @@ import os
 
 import logging
 
-sys.path.insert(1, os.getcwd()+"/stravaio")
-
 import pandas as pd
 import numpy as np
 
@@ -17,9 +15,20 @@ from critical_power import CriticalPower
 from activity import Activity
 from statist import Statist
 from activity import Activity
+from activity import actDeauthorize
 
-def login(token):
-	act = Activity(token)
+def logoff(acces_token):
+	actDeauthorize(acces_token)
+
+
+def login(user_token):
+
+	'''# Show python path
+	for p in sys.path:
+		print(" - " + p)
+	return'''
+	
+	act = Activity(user_token)
 	
 	endDate = datetime.datetime.now() +  timedelta(hours=24) 
 	startDate = endDate - timedelta(days=31)
@@ -28,7 +37,7 @@ def login(token):
 
 	athlete = act.getAthlete()
 	
-	return athlete
+	return act.ACCESS_TOKEN
 
 def getStatByMonth(list):	
 	# create logger

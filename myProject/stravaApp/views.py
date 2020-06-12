@@ -18,9 +18,9 @@ import plotly.graph_objs as go
 import plotly.offline as offline
 #from plotly.graph_objs import Scatter
 
-from main_django import getStatByMonth
-from main_django import getStatAnnual
-from main_django import login
+from main_django import login, logoff
+from main_django import getStatByMonth, getStatAnnual
+
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -36,8 +36,8 @@ def post_ajax(request):
 		if 'activityType' in request.POST:
 			activityType = request.POST['activityType']	
 			response["log"]  = "Activity type : <" + activityType + ">"
-		if 'statType' in request.POST:
-			statType = request.POST['statType']	
+		if 'pageType' in request.POST:
+			statType = request.POST['pageType']	
 			response["log"]  = response["log"] + " Stat type : <" + statType  +">"
 		
 	if statType=="month":
@@ -82,53 +82,24 @@ def viewLogin(request):
 		num_visits = request.session.get('num_visits', 0)
 		request.session['num_visits'] = num_visits + 1
 		
-		html = login(token)
+		html = login(token)		
 		
-		return render(request, 'loginStrava.html', locals() )
+		#logoff
+		logoff(html)
+		
 	else:
-		return HttpResponseRedirect("http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://127.0.0.1:8000/strava/login/&approval_prompt=force&scope=read,activity:read_all")
+		html = ""
+		token = "token not found !!!!"
+		
+	return render(request, 'loginStrava.html', locals() )
 
 
 
 	
 def viewByMonth(request):
 	actif = 1
-	#print (settings.BASE_DIR)	
-	#print(sys.path)
-	'''f_name = os.path.join(f"C:/Users/gaelv/.stravadata", f"global_data_134706.parquet")
 	
-	#print (f_name)
-	df = pd.read_parquet(f_name)
-	
-	html= df.to_html'''
-	
-	if 'actType' in request.GET:
-		activityType = request.GET['actType']	
-		request.session['activityType'] = activityType
-	else:
-		activityType = request.session.get('activityType', "run")
-		print("")
-		
-		#df = getStatByMonth()
-		
-		#print (df)
-		
-		html = 	None#df.to_html()
-		
-
-		
-		'''return HttpResponse("""
-			<h1>Bienvenue sur mon blog !</h1>
-			<p>Les crêpes bretonnes ça tue des mouettes en plein vol !</p>
-		""")'''
-	return render(request, 'byMonthStrava.html', locals() )
-	
-def viewYearProgression(request):
-	actif = 2
-	#plot_div = generateGraph(["run"])
-
-	return render(request, "byYearStrava.html", locals())
-
+	return render(request, 'baseStrava.html', locals() )
 	
 def generateGraph(list, objList):
 	html = ""
