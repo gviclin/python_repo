@@ -25,4 +25,7 @@ systemctl status nginx
 #gunicorn
 gunicorn myProject.wsgi:application
 
+#linux log
+sudo sed -i 's/quiet splash/quiet splash loglevel=3/' /etc/default/grub
+sudo update-grub
 
