@@ -17,6 +17,8 @@ from statist import Statist
 from activity import Activity
 from activity import actDeauthorize
 
+from stravaio import StravaIO
+
 def logoff(acces_token):
 	actDeauthorize(acces_token)
 
@@ -30,14 +32,20 @@ def login(user_token):
 	
 	act = Activity(user_token)
 	
+	return act.ACCESS_TOKEN
+	
+def getAthlete(access_token):
+	access = StravaIO(access_token=access_token)
+	
+	'''
 	endDate = datetime.datetime.now() +  timedelta(hours=24) 
 	startDate = endDate - timedelta(days=31)
 	#startDate = endDate - timedelta(days=31*12*15)
-	act.retreive_strava_activities(startDate, endDate)	
+	act.retreive_strava_activities(startDate, endDate)	'''
 
-	athlete = act.getAthlete()
+	athlete = access.get_logged_in_athlete()
+	return athlete.to_dict()
 	
-	return act.ACCESS_TOKEN
 
 def getStatByMonth(list):	
 	# create logger

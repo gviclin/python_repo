@@ -18,9 +18,7 @@ import plotly.graph_objs as go
 import plotly.offline as offline
 #from plotly.graph_objs import Scatter
 
-from main_django import login, logoff
-from main_django import getStatByMonth, getStatAnnual
-
+import main_django
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -48,7 +46,7 @@ def post_ajax(request):
 			listType.append("VirtualRide")
 		
 		if len(activityType)>0:
-			df = getStatByMonth(listType)
+			df = main_django.getStatByMonth(listType)
 			html = 	df.to_html()
 			
 	elif statType=="year":
@@ -71,6 +69,10 @@ def post_ajax(request):
 # Create your views here.
 def viewLogin(request):
 	actif = 3	
+	if os.environ.get('DEV'):
+		dev = True
+	else:
+		dev = False
 	
 	#url = request.path
 	#Get param :
@@ -82,10 +84,17 @@ def viewLogin(request):
 		num_visits = request.session.get('num_visits', 0)
 		request.session['num_visits'] = num_visits + 1
 		
-		html = login(token)		
+		access_token = main_django.login(token)
+		
+		#store the activity instance
+		request.session['ACCESS_TOKEN'] = access_token
+		
+		html = access_token
+		
+		html = main_django.getAthlete(access_token)
 		
 		#logoff
-		logoff(html)
+		#main_django.logoff(html)
 		
 	else:
 		html = ""
@@ -94,17 +103,19 @@ def viewLogin(request):
 	return render(request, 'loginStrava.html', locals() )
 
 
-
 	
 def viewByMonth(request):
 	actif = 1
-	
+	if os.environ.get('DEV'):
+		dev = True
+	else:
+		dev = False
 	return render(request, 'baseStrava.html', locals() )
 	
 def generateGraph(list, objList):
 	html = ""
 	
-	df = getStatAnnual(list, objList)
+	df = main_django.getStatAnnual(list, objList)
 	
 	listLines = df["year"].unique()
 	
