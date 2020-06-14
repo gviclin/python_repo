@@ -1,38 +1,94 @@
+label {
+  display: inline-block;
+}
+.navbar {
+  overflow: hidden;
+  background-color: #333;
+}
+
+.navbar a {
+  float: left;
+  font-size: 16px;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+.dropdown {
+  float: left;
+  overflow: hidden;
+}
+
+.dropdown .dropbtn {
+  font-size: 16px;  
+  border: none;
+  outline: none;
+  color: white;
+  padding: 14px 16px;
+  background-color: inherit;
+  font-family: inherit;
+  margin: 0;
+}
+
+.navbar a:hover, .dropdown:hover .dropbtn {
+  background-color: red;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  float: none;
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+}
+
+.dropdown-content a:hover {
+  background-color: #ddd;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
 section {
-  /* position is static by default */
-	/*margin: 35px;*/
+	//margin: 35px;
 	width: auto;
 	height: auto;
 	float: left;
 	padding: 1px;
 	width: 100%;
-	/*background-color: #21f1f1;*/	
+	//background-color: #21f1f1;
 }
 
 .log {
 	background-color: lightblue;
 }
 .listCheck {
-	/*background-color: blue;*/
+	//background-color: blue;
 }
 
 .cb {
+	display: inline-block;
 	float: left;
 	height: auto;
 	width: auto;
-	/*background-color: lightblue;*/
+	//background-color: lightblue;
 }
 
-.page-header {
-    /*background-color: #FFFFFF;*/
-	color: white;	
-    margin-top: 0;
-    padding: 20px 20px 20px 40px;
-	text-decoration: none;
-}
 
 .content {
-	/*float: bottom;*/
+	//float: bottom;
 	width: auto;
 	height: auto;
 	margin-left: auto;
@@ -79,7 +135,7 @@ th {
     margin-top: 0;
     padding: 20px 20px 20px 40px;
 }
-
+/*
 .button {
   background-color: #5C4F60;
   border: none;
@@ -91,38 +147,5 @@ th {
   font-size: 16px;
   margin: 4px 2px;
   cursor: pointer;
-}
-
-.topnav {
-  overflow: hidden;
-  background-color: #222;
-  margin-bottom: 20px;
-}
-
-.topnav a ,.topnav-right a{
-  float: left;
-  color: #f2f2f2;
-  text-align: center;
-  padding: 14px 16px;
-  text-decoration: none;
-  font-size: 17px;
-}
-
-.topnav a:hover {
-  background-color: #ddd;
-  color: black;
-}
-
-.topnav a.active {
-  background-color: #858585;
- 
-}
-
-.topnav a:visited {color: #1B3E70;} 
-
-.topnav-right {
-  float: right;
-  color: #f2f2f2;
-}
-
+}*/
 

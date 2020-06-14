@@ -60,6 +60,12 @@ def post_ajax(request):
 			
 		if len(activityType)>0:
 			html = generateGraph(listType, objList)		
+			
+	elif statType=="setting":
+		html = "Settings"
+		
+	elif statType=="logout":
+		html = "Logout"	
 		
 	response["data"] = html
 

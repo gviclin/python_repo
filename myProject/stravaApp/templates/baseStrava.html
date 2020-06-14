@@ -9,46 +9,46 @@
 	    <title>Statistics</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		
-        <link href='//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+		<link href='//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
 				
-
 				
         <!--link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"-->
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
-		<link rel="stylesheet" href="{% static 'css/strava.css' %}">
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <!--link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"-->
+		
+		<!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"-->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
 		<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="{% static 'css/strava.css' %}">
     </head>
 	<body>
-		<div class="page-header">
-			<div class="topnav">
-				<a id="monthLink" class="menu_button">By month</a>
-				<a id="yearLink" class="menu_button">Year progression</a>
-			
-			<div class="topnav-right">
-				<a id="loginLink" class="menu_button">Login</a>
-			</div></div>
+	
+	<div class="navbar">
+	  <a id="monthLink">By month</a>
+	  <a id="yearLink">Year progression</a>
+	  <div class="dropdown" style="float:right;">
+		<button class="dropbtn" id="loginLink">Login 
+		  <i class="fa fa-caret-down"></i>
+		</button>
+		<div class="dropdown-content">
+		  <a id="settingLink">Setting</a>
+		  <a id="logoutLink">Logout</a>
 		</div>
-			<!--h1><a href="/">Statistics</a></h1-->
+	  </div> 
+	</div>
+
+	<!--h1><a href="/">Statistics</a></h1-->
 			
 		<!-- checkbox list-->
 		<section>
-			<div class="cb">
-				<div class="row">
-					<div class="col">
-						<div class="listCheck">
-							<input class="listCheck-input" type="checkbox" value="Run" id="run">
-							<label class="listCheck-label" for="run">Run</label>
-						</div>
-					</div>
-					<div class="listCheck">
-						<input class="listCheck-input" type="checkbox" value="Ride" id="ride">
-						<label class="listCheck-label" for="ride">Ride</label>
-					</div>
-				</div>
-			</div> 
+		<div class="typeClass">
+			<label  style="word-wrap:break-word">
+				<input id="run"  type="checkbox" value="Run" />Run
+			</label>
+			<label  style="word-wrap:break-word">
+				<input id="ride"  type="checkbox" value="Ride" />Ride
+			</label>
+		</div>			
 		</section>
 		
 		<section>
@@ -112,8 +112,19 @@
 		window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://127.0.0.1:8000/login/&approval_prompt=force&scope=read,activity:read_all";
 		{% else %}
 		window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://mypersonalstat.ddns.net/login/&approval_prompt=force&scope=read,activity:read_all";
-		{% endif %}
-		
+		{% endif %}		
+	});
+	
+	$("#settingLink").click(function(){
+		sessionStorage.setItem("pageType", "setting");
+		sendPostMessage(GetActivityType(), "setting");	
+		updateMenu();
+	});
+	
+	$("#logoutLink").click(function(){
+		sessionStorage.setItem("pageType", "logout");
+		sendPostMessage(GetActivityType(), "logout");	
+		updateMenu();
 	});
  
 	$("#run").change(function(){
