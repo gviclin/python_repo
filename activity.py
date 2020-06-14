@@ -3,7 +3,6 @@ from stravaio import StravaIO
 from stravaio import dir_stravadata
 from stravaio import convert_datetime_to_iso8601
 from stravaio import get_access_token
-from stravaio import deauthorize
 
 import os
 import json
@@ -23,9 +22,6 @@ import datetime
 import time
 
 import pprint 
-
-def actDeauthorize(access_token):
-		deauthorize(access_token)
 
 class Activity():
 	

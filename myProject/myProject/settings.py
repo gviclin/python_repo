@@ -123,7 +123,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-
 sys.path.insert(0, 'D:\\python\\python_repo')
 sys.path.insert(0, 'D:\\python\\python_repo\\stravaio')
 sys.path.insert(0, '/home/gv/python_repo')

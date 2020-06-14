@@ -11,31 +11,30 @@ import datetime
 import time
 from datetime import timedelta  
 
-from critical_power import CriticalPower
-from activity import Activity
+import stravaio 
+
 from statist import Statist
-from activity import Activity
-from activity import actDeauthorize
-
-from stravaio import StravaIO
-
-def logoff(acces_token):
-	actDeauthorize(acces_token)
-
 
 def login(user_token):
-
-	'''# Show python path
-	for p in sys.path:
-		print(" - " + p)
-	return'''
+	# Public identifier for apps
+	STRAVA_CLIENT_ID = 9402
 	
-	act = Activity(user_token)
+	# Secret known only to the application and the authorization server
+	STRAVA_CLIENT_SECRET = "7960741d3c1563506e073c364e71473c5da1405c"
 	
-	return act.ACCESS_TOKEN
+	ACCESS_TOKEN = stravaio.get_access_token(
+		port=8000,
+		client_id=STRAVA_CLIENT_ID,
+		client_secret=STRAVA_CLIENT_SECRET,
+		user_token=user_token
+	)	
+	return ACCESS_TOKEN
+	
+def logoff(acces_token):	
+	stravaio.deauthorize(access_token)
 	
 def getAthlete(access_token):
-	access = StravaIO(access_token=access_token)
+	access = stravaio.StravaIO(access_token=access_token)
 	
 	'''
 	endDate = datetime.datetime.now() +  timedelta(hours=24) 

@@ -18,7 +18,7 @@ import plotly.graph_objs as go
 import plotly.offline as offline
 #from plotly.graph_objs import Scatter
 
-import main_django
+from stravaApp.stravaInterface import *
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -46,7 +46,7 @@ def post_ajax(request):
 			listType.append("VirtualRide")
 		
 		if len(activityType)>0:
-			df = main_django.getStatByMonth(listType)
+			df = getStatByMonth(listType)
 			html = 	df.to_html()
 			
 	elif statType=="year":
@@ -84,17 +84,17 @@ def viewLogin(request):
 		num_visits = request.session.get('num_visits', 0)
 		request.session['num_visits'] = num_visits + 1
 		
-		access_token = main_django.login(token)
+		access_token = login(token)
 		
 		#store the activity instance
 		request.session['ACCESS_TOKEN'] = access_token
 		
 		html = access_token
 		
-		html = main_django.getAthlete(access_token)
+		html = getAthlete(access_token)
 		
 		#logoff
-		#main_django.logoff(html)
+		#logoff(html)
 		
 	else:
 		html = ""
@@ -105,6 +105,10 @@ def viewLogin(request):
 
 	
 def viewByMonth(request):
+	# Show python path
+	'''for p in sys.path:
+		print(" - " + p)
+	return'''
 	actif = 1
 	if os.environ.get('DEV'):
 		dev = True
@@ -115,7 +119,7 @@ def viewByMonth(request):
 def generateGraph(list, objList):
 	html = ""
 	
-	df = main_django.getStatAnnual(list, objList)
+	df = getStatAnnual(list, objList)
 	
 	listLines = df["year"].unique()
 	
