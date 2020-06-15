@@ -4,6 +4,8 @@ import os
 
 import logging
 
+from loguru import logger
+
 import pandas as pd
 import numpy as np
 
@@ -30,7 +32,7 @@ def login(user_token):
 	)	
 	return ACCESS_TOKEN
 	
-def logoff(acces_token):	
+def logoff(access_token):	
 	stravaio.deauthorize(access_token)
 	
 def getAthlete(access_token):
@@ -41,9 +43,19 @@ def getAthlete(access_token):
 	startDate = endDate - timedelta(days=31)
 	#startDate = endDate - timedelta(days=31*12*15)
 	act.retreive_strava_activities(startDate, endDate)	'''
+		
 
 	athlete = access.get_logged_in_athlete()
-	return athlete.to_dict()
+	
+	if athlete is not None:	
+		athlete = athlete.to_dict()
+			
+		logger.debug("athlete : id " + str(athlete["id"]) + ", " + athlete["firstname"] + " " + athlete["lastname"] + " from " + athlete["city"] + ", " + str(athlete["weight"]) + "kg")
+	else:
+		logger.debug(f"Error in calling Strava API for acces token <" + access_token + ">")	
+		athlete = None
+		
+	return athlete
 	
 
 def getStatByMonth(list):	

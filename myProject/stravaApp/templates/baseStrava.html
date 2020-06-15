@@ -7,14 +7,10 @@
     <head>
 		<html lang="en">
 	    <title>Statistics</title>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		
-		<link href='//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
-				
-				
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">		
+		<link href='//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext' rel='stylesheet' type='text/css'>				
         <!--link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"-->
-        <!--link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"-->
-		
+        <!--link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"-->		
 		<!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"-->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 		<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -23,12 +19,12 @@
     </head>
 	<body>
 	
+	<!-- navbar-->
 	<div class="navbar">
 	  <a id="monthLink">By month</a>
 	  <a id="yearLink">Year progression</a>
 	  <div class="dropdown" style="float:right;">
-		<button class="dropbtn" id="loginLink">Login 
-		  <i class="fa fa-caret-down"></i>
+		<button class="dropbtn" id="loginLink">{{name}}
 		</button>
 		<div class="dropdown-content">
 		  <a id="settingLink">Setting</a>
@@ -37,32 +33,30 @@
 	  </div> 
 	</div>
 
-	<!--h1><a href="/">Statistics</a></h1-->
-			
-		<!-- checkbox list-->
-		<section>
-		<div class="typeClass">
-			<label  style="word-wrap:break-word">
-				<input id="run"  type="checkbox" value="Run" />Run
-			</label>
-			<label  style="word-wrap:break-word">
-				<input id="ride"  type="checkbox" value="Ride" />Ride
-			</label>
-		</div>			
-		</section>
-		
-		<section>
-			<div class="log">
-			<p id="testgv"></p>
-			</div>
-		</section>
+	<!-- checkbox list-->
+	<section>
+	<div class="typeClass">
+		<label  style="word-wrap:break-word">
+			<input id="run"  type="checkbox" value="Run" />Run
+		</label>
+		<label  style="word-wrap:break-word">
+			<input id="ride"  type="checkbox" value="Ride" />Ride
+		</label>
+	</div>			
+	</section>
+	
+	<section>
+		<div class="log">
+		<p id="testgv"></p>
+		</div>
+	</section>
 
-		<section>
-			<div class="content" id="id_content">
-				{% block content %}
-				{% endblock %}
-			</div>
-		</section>
+	<section>
+		<div class="content" id="id_content">
+			{% block content %}
+			{% endblock %}
+		</div>
+	</section>
 		
 	</body>
 
@@ -75,9 +69,14 @@
  $(document).ready(function(){
  
 	// Store the page type
-	{% if actif == 1 %}sessionStorage.setItem("pageType", "month");{% endif %}
-	{% if actif == 2 %}sessionStorage.setItem("pageType", "year");{% endif %}
-	{% if actif == 3 %}sessionStorage.setItem("pageType", "login");{% endif %}
+{% if actif == 1 %}sessionStorage.setItem("pageType", "month");{% endif %}
+{% if actif == 2 %}sessionStorage.setItem("pageType", "year");{% endif %}
+{% if actif == 3 %}sessionStorage.setItem("pageType", "login");{% endif %}	
+{% if isLogged %} 
+sessionStorage.setItem("isLogged", "1");
+{% else %}
+sessionStorage.setItem("isLogged", "0");
+{% endif %}	
 	
 	updateMenu();
 	
@@ -87,10 +86,6 @@
 	{% if actif != 3 %}
 	sendPostMessage(GetActivityType(), sessionStorage.getItem("pageType"));
 	{% endif %}
-	
-	$('#monthLink').css('cursor', 'pointer'); // 'default' to revert
-	$('#yearLink').css('cursor', 'pointer'); // 'default' to revert
-	$('#loginLink').css('cursor', 'pointer'); // 'default' to revert
  
  	$("#monthLink").click(function(){
 		sessionStorage.setItem("pageType", "month");
@@ -124,6 +119,7 @@
 	$("#logoutLink").click(function(){
 		sessionStorage.setItem("pageType", "logout");
 		sendPostMessage(GetActivityType(), "logout");	
+		sessionStorage.setItem("isLogged", "0");
 		updateMenu();
 	});
  
@@ -149,6 +145,15 @@
 	}
 	return type
 }
+
+ function isLogged() {
+	if (sessionStorage.getItem("isLogged") == 1) 
+		return true;	
+	else
+		return false;
+}
+
+
  
  function sendPostMessage(activityType, pageType) {
 	// make POST ajax call
@@ -186,21 +191,45 @@
 		$('#monthLink').css('background-color', '#858585');
 		$('#yearLink').css('background-color', '#222');
 		$('#loginLink').css('background-color', '#222');
-		$('.listCheck').show();
+		$('.typeClass').show();
 	}
 	else if (sessionStorage.getItem("pageType") == "year")
 	{
 		$('#yearLink').css('background-color', '#858585');
 		$('#monthLink').css('background-color', '#222');
 		$('#loginLink').css('background-color', '#222');
-		$('.listCheck').show();
+		$('.typeClass').show();
 	}
 	else if (sessionStorage.getItem("pageType") == "login")
 	{
 		$('#loginLink').css('background-color', '#858585');
 		$('#monthLink').css('background-color', '#222');
 		$('#yearLink').css('background-color', '#222');
-		$('.listCheck').hide();
+		$('.typeClass').hide();
+	}
+	
+	if (isLogged())
+	{
+		//$('#loginLink').html("Gael Viclin " +  "<i class=\"fa fa-caret-down\"></i>");
+		$('.dropdown').hover(
+			  function() {
+				$('.dropdown-content').css("display", "block");
+			}, function() {
+				$('.dropdown-content').css("display", "none");
+			}
+		);
+	}
+	else
+	{
+		$('#loginLink').html("Login ");
+		$('.dropdown').hover(
+			  function() {
+				$('.dropdown-content').css("display", "none");
+			}, function() {
+				$('.dropdown-content').css("display", "none");
+			}
+		);
+		//$('.dropdown-content').hide();
 	}
 }
  </script>

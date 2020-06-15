@@ -483,7 +483,7 @@ def get_access_token(port, client_id, client_secret, user_token):
 	}
 	r = requests.post("https://www.strava.com/oauth/token", params)
 	data = r.json()
-	logger.debug(f"get_access_token result : <"  + data.get('access_token', 'Oeps something went wrong!') + ">")
+	logger.debug(f"get_access_token result : <"  + data.get('access_token', '') + ">")
 	
 	return data.get('access_token')
 	

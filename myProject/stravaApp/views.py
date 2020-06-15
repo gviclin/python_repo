@@ -5,6 +5,8 @@ from django.shortcuts import redirect
 from django.http import HttpResponse, HttpResponseRedirect,JsonResponse
 from django.conf import settings
 
+from loguru import logger
+
 import os
 import sys
 import json
@@ -16,7 +18,6 @@ import re
 import plotly.express as px
 import plotly.graph_objs as go
 import plotly.offline as offline
-#from plotly.graph_objs import Scatter
 
 from stravaApp.stravaInterface import *
 
@@ -65,6 +66,16 @@ def post_ajax(request):
 		html = "Settings"
 		
 	elif statType=="logout":
+		#logoff
+		
+		access_token = request.session.get('ACCESS_TOKEN', None)
+		
+		if 	access_token is not None:
+			#logger.debug(f"logout. Access token <" + access_token + ">")		
+			logoff(access_token)
+			
+		request.session['ACCESS_TOKEN'] = None
+			
 		html = "Logout"	
 		
 	response["data"] = html
@@ -79,43 +90,82 @@ def viewLogin(request):
 		dev = True
 	else:
 		dev = False
+		
+	isLogged = True
+	name = "Login"
 	
 	#url = request.path
 	#Get param :
 	if 'code' in request.GET:
-		token = request.GET['code']	
-		request.session['token'] = token
+		user_code = request.GET['code']	
 		
-		# Number of visits to this view, as counted in the session variable.
-		num_visits = request.session.get('num_visits', 0)
-		request.session['num_visits'] = num_visits + 1
+		logger.debug(f" user_code <" + str(user_code) + ">")		
 		
-		access_token = login(token)
+		#check if already logged
+		temp_access_token = request.session.get('ACCESS_TOKEN', None) 
+				
+		if  temp_access_token is None:
+					
+			'''# Number of visits to this view, as counted in the session variable.
+			num_visits = request.session.get('num_visits', 0)
+			request.session['num_visits'] = num_visits + 1'''
+			
+			access_token = login(user_code)
+			
+			if access_token is not None or not access_token:			
+				#store the activity instance
+				request.session['ACCESS_TOKEN'] = access_token
+			else:
+				isLogged =  False
 		
-		#store the activity instance
-		request.session['ACCESS_TOKEN'] = access_token
-		
-		html = access_token
-		
-		html = getAthlete(access_token)
-		
-		#logoff
-		#logoff(html)
-		
+		else:
+			access_token = 	temp_access_token			
+				
+
 	else:
 		html = ""
-		token = "token not found !!!!"
+		isLogged =  False
+		
+	
+	if isLogged:
+		
+		logger.debug(f" access_token <" + str(access_token) + ">")		
+		
+		html = getAthlete(access_token)	
+		
+		if html is None:
+			#logger.debug(f"logout. Access token <" + access_token + ">")		
+			logoff(access_token)
+			request.session['ACCESS_TOKEN'] = None
+			html = f"Error in calling Strava API"
+		else:
+			name = html["firstname"] + " " + html["lastname"]  	
+	
+		#logger.debug(f"viewLogin. Access token <" + str(access_token) + ">")		
+	else:
+		html = "Login failed ! "
+		request.session['ACCESS_TOKEN'] = None
+
 		
 	return render(request, 'loginStrava.html', locals() )
 
 
 	
 def viewByMonth(request):
+	
+	#check if already logged
+	'''temp_access_token = request.session.get('ACCESS_TOKEN', None) 
+			
+	if  temp_access_token is not None:
+					logoff(temp_access_token)'''
+	
 	# Show python path
 	'''for p in sys.path:
 		print(" - " + p)
 	return'''
 	actif = 1
+	isLogged =  False
+	name="Login"
 	if os.environ.get('DEV'):
 		dev = True
 	else:
