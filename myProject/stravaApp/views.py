@@ -166,6 +166,7 @@ def viewByMonth(request):
 	actif = 1
 	isLogged =  False
 	name="Login"
+	access_token = request.session.get('ACCESS_TOKEN', None)
 	if os.environ.get('DEV'):
 		dev = True
 	else:
