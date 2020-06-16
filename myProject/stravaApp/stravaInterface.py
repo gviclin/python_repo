@@ -58,31 +58,29 @@ def getAthlete(access_token):
 	return athlete
 	
 
-def getStatByMonth(list):	
+def getStatByMonth(id, list):	
 	# create logger
 	logger = logging.getLogger('')
 	logger.setLevel(logging.DEBUG)
 	
 	stat = Statist(logger)
 
-	athlete_id = 134706
+	#athlete_id = 134706
 	
-	return stat.Stat_dist_by_month(athlete_id,list)	
+	return stat.Stat_dist_by_month(id,list)	
 	
 	#wait = input("PRESS ENTER TO CONTINUE.")
 	
-def getStatAnnual(list,listObjective):	
+def getStatAnnual(id, list,listObjective):	
 	# create logger
 	logger = logging.getLogger('')
 	logger.setLevel(logging.DEBUG)
 	
 	stat = Statist(logger)
 	
-	athlete_id = 134706
+	#athlete_id = 134706
 	
-	return stat.Stat_dist_annual(athlete_id,list,listObjective)
-	#return stat.Stat_dist_annual(athlete_id,list,[1400,1600])
-	#stat.Stat_dist_annual(athlete["id"],["Run"],[600,700])	
+	return stat.Stat_dist_annual(id,list,listObjective)
 	
 	#wait = input("PRESS ENTER TO CONTINUE.")
 	

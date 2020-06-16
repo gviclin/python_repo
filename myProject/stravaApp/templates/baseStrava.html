@@ -24,7 +24,7 @@
 	  <a id="monthLink">By month</a>
 	  <a id="yearLink">Year progression</a>
 	  <div class="dropdown" style="float:right;">
-		<button class="dropbtn" id="loginLink">{{name}}
+		<button class="dropbtn" id="loginLink">{% autoescape off %}{{name}}{% endautoescape %}
 		</button>
 		<div class="dropdown-content">
 		  <a id="settingLink">Setting</a>
@@ -100,14 +100,16 @@ sessionStorage.setItem("isLogged", "0");
 	});
 	
 	$("#loginLink").click(function(){
-		sessionStorage.setItem("pageType", "login");
-		
-		// callback link from strava depends on DEV / PROD mode 
-		{% if  dev %}
-		window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://127.0.0.1:8000/login/&approval_prompt=force&scope=read,activity:read_all";
-		{% else %}
-		window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://mypersonalstat.ddns.net/login/&approval_prompt=force&scope=read,activity:read_all";
-		{% endif %}		
+		if (!isLogged()) {
+			sessionStorage.setItem("pageType", "login");
+			
+			// callback link from strava depends on DEV / PROD mode 
+			{% if  dev %}
+			window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://127.0.0.1:8000/login/&approval_prompt=force&scope=read,activity:read_all";
+			{% else %}
+			window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://mypersonalstat.ddns.net/login/&approval_prompt=force&scope=read,activity:read_all";
+			{% endif %}	
+		}
 	});
 	
 	$("#settingLink").click(function(){
@@ -218,6 +220,8 @@ sessionStorage.setItem("isLogged", "0");
 				$('.dropdown-content').css("display", "none");
 			}
 		);
+		//deactivate login button
+		$('.dropbtn').css( 'cursor', 'default');
 	}
 	else
 	{
@@ -229,7 +233,8 @@ sessionStorage.setItem("isLogged", "0");
 				$('.dropdown-content').css("display", "none");
 			}
 		);
-		//$('.dropdown-content').hide();
+		//activate login button
+		$('.dropbtn').css( 'cursor', 'pointer');
 	}
 }
  </script>

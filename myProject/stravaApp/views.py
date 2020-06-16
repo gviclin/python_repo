@@ -27,58 +27,68 @@ from django.views.decorators.csrf import csrf_exempt
 def post_ajax(request):
 	activityType = "No value"
 	statType = "No value"
-	response = {"log":"No log"}
+	response = {"log":""}
 	html = ""
 	listType = []
 	
-	if request.method == "POST":
-		if 'activityType' in request.POST:
-			activityType = request.POST['activityType']	
-			response["log"]  = "Activity type : <" + activityType + ">"
-		if 'pageType' in request.POST:
-			statType = request.POST['pageType']	
-			response["log"]  = response["log"] + " Stat type : <" + statType  +">"
-		
-	if statType=="month":
-		if activityType.find("run")!=-1:
-			listType.append("Run")
-		if activityType.find("ride")!=-1:
-			listType.append("Ride")
-			listType.append("VirtualRide")
-		
-		if len(activityType)>0:
-			df = getStatByMonth(listType)
-			html = 	df.to_html()
+	#check if logged
+	access_token = request.session.get('ACCESS_TOKEN', None) 
+	id = request.session.get('id', None) 	
+	if  access_token is not None and id is not None:	
+	
+		if request.method == "POST":
+			if 'activityType' in request.POST:
+				activityType = request.POST['activityType']	
+				response["log"]  = "Activity type : <" + activityType + ">"
+			if 'pageType' in request.POST:
+				statType = request.POST['pageType']	
+				response["log"]  = response["log"] + " Stat type : <" + statType  +">"
 			
-	elif statType=="year":
-		if activityType.find("run")!=-1:
-			objList = [1400,1600]
-			listType.append("Run")
-		if activityType.find("ride")!=-1:
-			objList = [6000,7000]
-			listType.append("Ride")
-			listType.append("VirtualRide")
+		if statType=="month":
+			if activityType.find("run")!=-1:
+				listType.append("Run")
+			if activityType.find("ride")!=-1:
+				listType.append("Ride")
+				listType.append("VirtualRide")
 			
-		if len(activityType)>0:
-			html = generateGraph(listType, objList)		
+			if len(activityType)>0:
+				df = getStatByMonth(id, listType)
+				html = 	df.to_html()
+				
+		elif statType=="year":
+			if activityType.find("run")!=-1:
+				objList = [1400,1600]
+				listType.append("Run")
+			if activityType.find("ride")!=-1:
+				objList = [6000,7000]
+				listType.append("Ride")
+				listType.append("VirtualRide")
+				
+			if len(activityType)>0:
+				html = generateGraph(id, listType, objList)		
+				
+		elif statType=="setting":
+			html = "Settings"
 			
-	elif statType=="setting":
-		html = "Settings"
-		
-	elif statType=="logout":
-		#logoff
-		
-		access_token = request.session.get('ACCESS_TOKEN', None)
-		
-		if 	access_token is not None:
-			#logger.debug(f"logout. Access token <" + access_token + ">")		
-			logoff(access_token)
+		elif statType=="logout":
+			#logoff
 			
-		request.session['ACCESS_TOKEN'] = None
+			access_token = request.session.get('ACCESS_TOKEN', None)
 			
-		html = "Logout"	
-		
-	response["data"] = html
+			if 	access_token is not None:
+				#logger.debug(f"logout. Access token <" + access_token + ">")		
+				logoff(access_token)
+				
+			request.session['ACCESS_TOKEN'] = None
+				
+			html = "Logout"	
+			
+		response["data"] = html
+	
+	#else:
+		# not logged
+		#response["log"]  = "Not logged"
+
 
 	return JsonResponse(response, status = 200)
 	
@@ -114,69 +124,77 @@ def viewLogin(request):
 			
 			if access_token is not None or not access_token:			
 				#store the activity instance
-				request.session['ACCESS_TOKEN'] = access_token
+				request.session['ACCESS_TOKEN'] = access_token				
+
 			else:
 				isLogged =  False
 		
 		else:
 			access_token = 	temp_access_token			
-				
 
 	else:
 		html = ""
 		isLogged =  False
 		
 	
-	if isLogged:
-		
-		logger.debug(f" access_token <" + str(access_token) + ">")		
-		
-		html = getAthlete(access_token)	
-		
-		if html is None:
-			#logger.debug(f"logout. Access token <" + access_token + ">")		
+	if isLogged:		
+		athlete = getAthlete(access_token)	
+		if athlete:		
+			request.session['id'] = athlete["id"] 		
+			name = athlete["firstname"] + " " + athlete["lastname"] + " <i class=\"fa fa-caret-down\"></i>"
+			html = athlete	
+		else:
 			logoff(access_token)
 			request.session['ACCESS_TOKEN'] = None
 			html = f"Error in calling Strava API"
-		else:
-			name = html["firstname"] + " " + html["lastname"]  	
+			name ="Login"
 	
 		#logger.debug(f"viewLogin. Access token <" + str(access_token) + ">")		
 	else:
 		html = "Login failed ! "
 		request.session['ACCESS_TOKEN'] = None
 
+	#logger.debug(f"session_key : "+ request.session.session_key)
 		
 	return render(request, 'loginStrava.html', locals() )
 
 
 	
 def viewByMonth(request):
-	
-	#check if already logged
-	'''temp_access_token = request.session.get('ACCESS_TOKEN', None) 
-			
-	if  temp_access_token is not None:
-					logoff(temp_access_token)'''
-	
-	# Show python path
-	'''for p in sys.path:
-		print(" - " + p)
-	return'''
-	actif = 1
-	isLogged =  False
-	name="Login"
-	access_token = request.session.get('ACCESS_TOKEN', None)
+	actif = 1	
 	if os.environ.get('DEV'):
 		dev = True
 	else:
 		dev = False
+		
+	# Show python path
+	'''for p in sys.path:
+	print(" - " + p)
+	return'''
+		
+	#check if logged
+	access_token = request.session.get('ACCESS_TOKEN', None) 			
+	if  access_token is not None:
+		isLogged =  True
+		#name="Login"
+		athlete = getAthlete(access_token)	
+		if athlete:		
+			request.session['id'] = athlete["id"] 	
+			name = athlete["firstname"] + " " + athlete["lastname"] + " <i class=\"fa fa-caret-down\"></i>"
+		else:
+			logoff(access_token)
+			request.session['ACCESS_TOKEN'] = None
+			html = f"Error in calling Strava API"
+			name ="Login"
+
+	else:
+		isLogged =  False
 	return render(request, 'baseStrava.html', locals() )
 	
-def generateGraph(list, objList):
+def generateGraph(id, list, objList):
 	html = ""
 	
-	df = getStatAnnual(list, objList)
+	df = getStatAnnual(id, list, objList)
 	
 	listLines = df["year"].unique()
 	
@@ -273,5 +291,5 @@ def generateGraph(list, objList):
 
 	return plot_div
 	
-
+	
 
