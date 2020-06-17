@@ -49,9 +49,8 @@ def getAthlete(access_token):
 
 	athlete = access.get_logged_in_athlete()
 	
-	athlete.store_locally()
-	
 	if athlete is not None:	
+		athlete.store_locally()
 		athlete = athlete.to_dict()
 			
 		logger.debug("athlete : id " + str(athlete["id"]) + ", " + athlete["firstname"] + " " + athlete["lastname"] + " from " + athlete["city"] + ", " + str(athlete["weight"]) + "kg")

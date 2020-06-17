@@ -107,7 +107,7 @@ sessionStorage.setItem("isLogged", "0");
 			{% if  dev %}
 			window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://127.0.0.1:8000/login/&approval_prompt=auto&scope=read_all,profile:read_all,activity:read_all";
 			{% else %}
-			window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://mypersonalstat.ddns.net/login/&approval_prompt=auto&scope=read_all,profile:read_allactivity:read_all";
+			window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://mypersonalstat.ddns.net/login/&approval_prompt=auto&scope=read_all,profile:read_all,activity:read_all";
 			{% endif %}	
 		}
 	});
