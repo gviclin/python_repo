@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 from tabulate import tabulate
 import pprint 
+from loguru import logger
 
 from stravaio import dir_stravadata
 
@@ -35,7 +36,7 @@ class Statist():
 		-------
 		todo
 		"""
-		print("Compute the local db from", startdate.strftime("%Y-%m-%d %H:%M:%S"), "to", enddate.strftime("%Y-%m-%d %H:%M:%S"))
+		logger.debug("Compute the local db from", startdate.strftime("%Y-%m-%d %H:%M:%S"), "to", enddate.strftime("%Y-%m-%d %H:%M:%S"))
 		pp = pprint.PrettyPrinter(indent=4)
 		# retreive the directory
 		activities_dir = os.path.join(self.strava_dir, f"summary_activities_{athlete_id}")

@@ -47,7 +47,7 @@
 	
 	<section>
 		<div class="log">
-		<p id="testgv"></p>
+		<p id="testgv">{{html}}</p>
 		</div>
 	</section>
 
@@ -105,9 +105,9 @@ sessionStorage.setItem("isLogged", "0");
 			
 			// callback link from strava depends on DEV / PROD mode 
 			{% if  dev %}
-			window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://127.0.0.1:8000/login/&approval_prompt=force&scope=read,activity:read_all";
+			window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://127.0.0.1:8000/login/&approval_prompt=auto&scope=read_all,profile:read_all,activity:read_all";
 			{% else %}
-			window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://mypersonalstat.ddns.net/login/&approval_prompt=force&scope=read,activity:read_all";
+			window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://mypersonalstat.ddns.net/login/&approval_prompt=auto&scope=read_all,profile:read_allactivity:read_all";
 			{% endif %}	
 		}
 	});
@@ -207,9 +207,9 @@ sessionStorage.setItem("isLogged", "0");
 		$('#loginLink').css('background-color', '#858585');
 		$('#monthLink').css('background-color', '#222');
 		$('#yearLink').css('background-color', '#222');
-		$('.typeClass').hide();
+		$('.typeClass').hide();		
 	}
-	
+
 	if (isLogged())
 	{
 		//$('#loginLink').html("Gael Viclin " +  "<i class=\"fa fa-caret-down\"></i>");
@@ -235,6 +235,7 @@ sessionStorage.setItem("isLogged", "0");
 		);
 		//activate login button
 		$('.dropbtn').css( 'cursor', 'pointer');
+		$('.typeClass').hide();	
 	}
 }
  </script>

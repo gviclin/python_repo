@@ -102,25 +102,16 @@ class StravaIO():
 		_fetched = self.activities_api.get_logged_in_athlete_activities(after=after, before=before, page=page,per_page=per_page)
 		nbElt = len(_fetched)
 		list_activities.extend(_fetched)
-		print("Page", page,  f"Fetched {len(_fetched)}")
+		logger.debug("Page " + str(page) + " Fetched " + str(len(_fetched)))
 		while nbElt>0:
 			
 			page+=1
 			_fetched = self.activities_api.get_logged_in_athlete_activities(after=after, before=before, page=page,per_page=per_page)
 			nbElt = len(_fetched)
-			print("Page", page,  f"Fetched {len(_fetched)}")
+			logger.debug("Page " + str(page) + " Fetched " + str(len(_fetched)))
 			list_activities.extend(_fetched)
 					
-		'''_fetched = self.activities_api.get_logged_in_athlete_activities(after=after, before=before, per_page=per_page)
-		if len(_fetched) > 0:
-			print(f"Fetched {len(_fetched)}, the latests is on {_fetched[-1].start_date}")
-			list_activities.extend(_fetched)
-			if len(_fetched) == per_page:
-				last_after = list_activities[-1].start_date
-				return self.get_logged_in_athlete_activities(after=last_after,before=before, per_page=per_page,list_activities=list_activities)
-		else:
-			print("empty list")
-		'''
+
 		return list_activities
 		
 

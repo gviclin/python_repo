@@ -1,6 +1,8 @@
 # some_file.py
 import sys
 import os
+import json
+import glob
 
 import logging
 
@@ -47,6 +49,8 @@ def getAthlete(access_token):
 
 	athlete = access.get_logged_in_athlete()
 	
+	athlete.store_locally()
+	
 	if athlete is not None:	
 		athlete = athlete.to_dict()
 			
@@ -57,6 +61,80 @@ def getAthlete(access_token):
 		
 	return athlete
 	
+
+def retreive_strava_activities(access_token, athlete_id, startdate, startbefore):
+	"""Get activitiesfrom activity ID
+
+	Returns
+	-------
+	activity: dataframe object
+	"""
+	
+	access = stravaio.StravaIO(access_token=access_token)
+		
+	logger.debug("Retreive strava activities from", startdate.strftime("%Y-%m-%d %H:%M:%S"), "to", startbefore.strftime("%Y-%m-%d %H:%M:%S"))
+
+	# Get list of athletes activities since a given date (after) given in a human friendly format.
+	# Kudos to [Maya: Datetimes for Humans(TM)](https://github.com/kennethreitz/maya)
+	# Returns a list of [Strava SummaryActivity](https://developers.strava.com/docs/reference/#api-models-SummaryActivity) objects
+	list_activities = access.get_logged_in_athlete_activities(after=startdate,before=startbefore, page=0,per_page =100 )
+
+	strava_dir = stravaio.dir_stravadata()
+	
+	activities_dir = os.path.join(strava_dir, f"summary_activities_{athlete_id}")
+	if not os.path.exists(activities_dir):
+		os.mkdir(activities_dir)
+
+	streams = []
+
+	# Remove all files from dir "summary_activities_{athlete_id}"
+	files = glob.glob(activities_dir + '/*')
+	for f in files:
+		os.remove(f)
+	 
+	# Obvious use - store all activities locally
+	for a in list_activities:
+		
+		#store activity
+		#print(a.dump())
+		_dict = a.to_dict()
+		_dict = stravaio.convert_datetime_to_iso8601(_dict)			
+		start_dt = a.start_date.strftime("%Y-%m-%d")
+
+		f_name = f"{start_dt}_{a.id}.json"
+		with open(os.path.join(activities_dir, f_name), 'w') as fp:
+			json.dump(_dict, fp)
+		
+		#store stream if not exist yet
+		'''if not self.isStreamStored(a.id):
+			streams = self.client.get_activity_streams(a.id, self.athlete.id, False) #local = False to retreive data from Strava
+			streams.store_locally()
+			streams = pd.DataFrame(streams.to_dict())
+		else:
+			dir_streams = os.path.join(dir_stravadata(), f"streams_{self.athlete.id}")
+			f_name = f"streams_{a.id,}.parquet"
+			f_path = os.path.join(dir_streams, f_name)
+			if f_path in glob.glob(f_path):
+				streams = pd.read_parquet(f_path)
+		
+		print("stream id : ",a.id)'''
+
+	stat = Statist(logger)
+	stat.Compute_the_local_db(athlete_id, startdate, startbefore)
+
+
+def isStreamStored(activity_id):
+	strava_dir = dir_stravadata()
+	streams_dir = os.path.join(strava_dir, f"streams_{self.athlete.id}")
+	streams_dir = os.path.join(streams_dir, f"streams_{activity_id}.parquet")
+	print(streams_dir)
+	if os.path.isfile(streams_dir):
+		return True
+	else:
+		return False
+
+
+
 
 def getStatByMonth(id, list):	
 	# create logger

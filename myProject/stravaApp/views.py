@@ -137,41 +137,26 @@ def viewLogin(request):
 		isLogged =  False
 		
 	
-	if isLogged:		
-		athlete = getAthlete(access_token)	
-		if athlete:		
-			request.session['id'] = athlete["id"] 		
-			name = athlete["firstname"] + " " + athlete["lastname"] + " <i class=\"fa fa-caret-down\"></i>"
-			html = athlete	
-		else:
-			logoff(access_token)
-			request.session['ACCESS_TOKEN'] = None
-			html = f"Error in calling Strava API"
-			name ="Login"
-	
-		#logger.debug(f"viewLogin. Access token <" + str(access_token) + ">")		
+	if isLogged:			
+		return index(request, actif = 1)
 	else:
 		html = "Login failed ! "
 		request.session['ACCESS_TOKEN'] = None
 
 	#logger.debug(f"session_key : "+ request.session.session_key)
 		
-	return render(request, 'loginStrava.html', locals() )
+	return render(request, 'baseStrava.html', locals() )
 
 
 	
-def viewByMonth(request):
-	actif = 1	
+def index(request, actif = 1):
+	# By default, stat by month
+	#actif = 1	
 	if os.environ.get('DEV'):
 		dev = True
 	else:
 		dev = False
-		
-	# Show python path
-	'''for p in sys.path:
-	print(" - " + p)
-	return'''
-		
+				
 	#check if logged
 	access_token = request.session.get('ACCESS_TOKEN', None) 			
 	if  access_token is not None:
@@ -179,12 +164,19 @@ def viewByMonth(request):
 		#name="Login"
 		athlete = getAthlete(access_token)	
 		if athlete:		
+			#Retreive strava datas
+			endDate = datetime.datetime.now() +  timedelta(hours=24) 
+			startDate = endDate - timedelta(days=31)
+			#startDate = endDate - timedelta(days=31*12*15)
+			retreive_strava_activities(access_token, athlete["id"], startDate, endDate)	
+			
 			request.session['id'] = athlete["id"] 	
 			name = athlete["firstname"] + " " + athlete["lastname"] + " <i class=\"fa fa-caret-down\"></i>"
+			#html = athlete	
 		else:
 			logoff(access_token)
 			request.session['ACCESS_TOKEN'] = None
-			html = f"Error in calling Strava API"
+			#html = f"Error in calling Strava API"
 			name ="Login"
 
 	else:
