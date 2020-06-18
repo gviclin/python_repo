@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 import cufflinks as cf
 import plotly.express as px
+import pytz
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -21,6 +22,7 @@ import pprint
 from loguru import logger
 
 from stravaio import dir_stravadata
+import stravaio 
 
 class Statist():
 
@@ -29,80 +31,112 @@ class Statist():
 		self.logger = logger
 		self.strava_dir = dir_stravadata()
 
-	def Compute_the_local_db(self,athlete_id, startdate, enddate):
-		""" Compute_the_db 
+	def RetreiveFromDateInterval(self,access_token, athlete_id, startdate, enddate):
+		""" RetreiveFromDateInterval 
 
 		Returns
 		-------
-		todo
+		list including the dates of the first and the last activity and the number of activity
 		"""
 		logger.debug("Compute the local db from <" + str(startdate) + "> to <" + str(enddate) + ">")
-		pp = pprint.PrettyPrinter(indent=4)
-		# retreive the directory
-		activities_dir = os.path.join(self.strava_dir, f"summary_activities_{athlete_id}")
+		
+		access = stravaio.StravaIO(access_token=access_token)
+		
+		# Get list of athletes activities since a given date (after) given in a human friendly format.
+		# Kudos to [Maya: Datetimes for Humans(TM)](https://github.com/kennethreitz/maya)
+		# Returns a list of [Strava SummaryActivity](https://developers.strava.com/docs/reference/#api-models-SummaryActivity) objects
+		list_activities = access.get_logged_in_athlete_activities(after=startdate,before=enddate, page=0,per_page =100 )
+
+		'''strava_dir = stravaio.dir_stravadata()
+		
+		activities_dir = os.path.join(strava_dir, f"summary_activities_{athlete_id}")
 		if not os.path.exists(activities_dir):
-			self.logger.debug("path ",activities_dir,"does not exist !")
+			os.mkdir(activities_dir)
+
+		streams = []
+
+		# Remove all files from dir "summary_activities_{athlete_id}"
+		files = glob.glob(activities_dir + '/*')
+		for f in files:
+			os.remove(f)
+		 
+		# Obvious use - store all activities locally
+		#for a in list_activities:		
+			#store stream if not exist yet
+			if not self.isStreamStored(a.id):
+				streams = self.client.get_activity_streams(a.id, self.athlete.id, False) #local = False to retreive data from Strava
+				streams.store_locally()
+				streams = pd.DataFrame(streams.to_dict())
+			else:
+				dir_streams = os.path.join(dir_stravadata(), f"streams_{self.athlete.id}")
+				f_name = f"streams_{a.id,}.parquet"
+				f_path = os.path.join(dir_streams, f_name)
+				if f_path in glob.glob(f_path):
+					streams = pd.read_parquet(f_path)
 			
+			print("stream id : ",a.id)'''
+					
+	
+		startdate = startdate.replace(tzinfo=None)
+		enddate = enddate.replace(tzinfo=None)
 		#wait = input("PRESS ENTER TO CONTINUE.")
 		#quit()
 
 		#self.logger.debug(activities_dir)
 		i = 0
 		list = []
-		# open all files
-		for path in Path(activities_dir).iterdir():
-			if path.is_file():
-				#print("file : ", str(path))
-				with open(path) as f:
-					file_data = json.load(f)	
-					
-					# Renvoie un datetime correspondant à la chaîne date_string, analysée conformément à format.
-					dt1 = datetime.datetime.strptime(file_data['start_date'], '%Y-%m-%dT%H:%M:%SZ')
-					
-					if dt1 > startdate and dt1 < enddate:
-						#self.logger.debug("open file number : " + str(i))
-						#print(dt1)
-						
-						#filtering datas
-						file_data.pop('athlete', None)		
-						file_data.pop('map', None)	
-						file_data.pop('achievement_count', None)	
-						file_data.pop('athlete_count', None)	
-						file_data.pop('elev_high', None)	
-						file_data.pop('elev_low', None)	
-						file_data.pop('external_id', None)	
-						file_data.pop('photo_count', None)	
-						file_data.pop('total_photo_count', None)	
-						file_data.pop('upload_id', None)			
-						file_data.pop('end_latlng', None)
-						file_data.pop('kudos_count', None)
-						file_data.pop('max_speed', None)		
-						file_data.pop('max_watts', None)
-						file_data.pop('start_date_local', None)		
-						file_data.pop('start_latlng', None)
-						file_data.pop('timezone', None)		
-						#file_data.pop('total_elevation_gain', None)
-						file_data.pop('weighted_average_watts', None)
-						file_data.pop('average_speed', None)
-						file_data.pop('average_watts', None)
-						file_data.pop('comment_count', None)
-						file_data.pop('gear_id', None)
-						file_data.pop('has_kudoed', None)
-						file_data.pop('kilojoules', None)
-							
-						df_temp = pd.DataFrame(file_data, index=[file_data["id"]])
+		for a in list_activities:
+			file_data = a.to_dict()
+			#logger.debug("file_data" + str(file_data))
 
-						list.append(df_temp)
-						i +=1
-						'''if i >20:
-							break'''
+			# Renvoie un datetime correspondant à la chaîne date_string, analysée conformément à format.
+			#dt1 = datetime.datetime.strptime(file_data['start_date'], '%Y-%m-%dT%H:%M:%SZ')
+			file_data['start_date'] = file_data['start_date'].replace(tzinfo=None)
+			dt1 = file_data['start_date']
+			if dt1 > startdate and dt1 < enddate:
+				#self.logger.debug("open file number : " + str(i))
+				#print(dt1)
+				
+				#filtering datas
+				file_data.pop('athlete', None)		
+				file_data.pop('map', None)	
+				file_data.pop('achievement_count', None)	
+				file_data.pop('athlete_count', None)	
+				file_data.pop('elev_high', None)	
+				file_data.pop('elev_low', None)	
+				file_data.pop('external_id', None)	
+				file_data.pop('photo_count', None)	
+				file_data.pop('total_photo_count', None)	
+				file_data.pop('upload_id', None)			
+				file_data.pop('end_latlng', None)
+				file_data.pop('kudos_count', None)
+				file_data.pop('max_speed', None)		
+				file_data.pop('max_watts', None)
+				file_data.pop('start_date_local', None)		
+				file_data.pop('start_latlng', None)
+				file_data.pop('timezone', None)		
+				#file_data.pop('total_elevation_gain', None)
+				file_data.pop('weighted_average_watts', None)
+				file_data.pop('average_speed', None)
+				file_data.pop('average_watts', None)
+				file_data.pop('comment_count', None)
+				file_data.pop('gear_id', None)
+				file_data.pop('has_kudoed', None)
+				file_data.pop('kilojoules', None)
+					
+				df_temp = pd.DataFrame(file_data, index=[file_data["id"]])
+
+				list.append(df_temp)
+				i +=1
+				'''if i >20:
+					break'''
 		
 		#concatenate all dataframe
 		newDf = pd.DataFrame()
 		if list:		
 			newDf = pd.concat(list)
 
-			newDf['start_date'] =  pd.to_datetime(newDf['start_date'], format='%Y-%m-%dT%H:%M:%SZ')
+			newDf['start_date'] =  pd.to_datetime(newDf['start_date'], format='%Y-%m-%dT%H:%M:%SZ')#, utc=True)
 			#newDf.drop('start_date', axis=1,inplace=True)
 			
 			#logger.debug(newDf.info(verbose=True))
@@ -129,8 +163,8 @@ class Statist():
 		
 		if not os.path.exists(f_parquet):
 			#logger.debug("Local bd empty (not parquet file)")
-			df = newDf
-			logger.debug("Local bd size changed from " + str(0) + " to " + str(len(df)))
+			existingDf = newDf
+			logger.debug("Local bd size changed from " + str(0) + " to " + str(len(existingDf)))
 		else:
 			# Existing dataframe
 			existingDf = pd.read_parquet(f_parquet)	
@@ -151,6 +185,9 @@ class Statist():
 			else:
 				logger.debug("Local bd size not changed : " + str(len(existingDf)) + " elements")
 		
+		#existingDf['start_date'] = existingDf.start_date.dt.tz_convert(pytz.utc)
+		#existingDf.tz_convert('UTC')
+		
 		#Store the dataframe		
 		existingDf.to_parquet(f_parquet)
 		
@@ -161,15 +198,11 @@ class Statist():
 		#existingDf.to_html(os.path.join(self.strava_dir, f"global_data_{athlete_id}.html"))
 		#logger.debug("---> 3")
 		#return the date range of the datas
-		if not existingDf.empty:
-			return [min(existingDf['start_date']),
-					max(existingDf['start_date']),
-					len(existingDf)]
-		else:
-			return [None,
-					None,
-					None]
-					
+		
+		return [min(existingDf['start_date'] if not existingDf.empty else None),
+				max(existingDf['start_date']  if not existingDf.empty else None),
+				len(existingDf) if not existingDf.empty else None]
+				
 					
 	def Stat_dist_by_month(self,athlete_id, activityType):
 		""" Compute_the_db 

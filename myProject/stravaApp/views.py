@@ -48,7 +48,6 @@ def post_ajax(request):
 	except user.DoesNotExist:
 		user = None
 	
-	id = request.session.get('id', None) 	
 	if  access_token is not None and id is not None:	
 	
 		if request.method == "POST":
@@ -67,7 +66,7 @@ def post_ajax(request):
 				listType.append("VirtualRide")
 			
 			if len(activityType)>0:
-				df = getStatByMonth(id, listType)
+				df = getStatByMonth(user_id, listType)
 				html = 	df.to_html()
 				
 		elif statType=="year":
@@ -88,7 +87,7 @@ def post_ajax(request):
 				listType.append("VirtualRide")
 				
 			if len(activityType)>0:
-				html = generateGraph(id, listType, objList)		
+				html = generateGraph(user_id, listType, objList)		
 				
 		elif statType=="setting":
 			html = "Settings"
@@ -161,32 +160,8 @@ def viewLogin(request):
 		isLogged =  False
 		
 	
-	if isLogged:			
-		return index(request, actif = 1)
-	else:
-		html = "Login failed ! "
-		request.session['ACCESS_TOKEN'] = None
-
-	#logger.debug(f"session_key : "+ request.session.session_key)
-		
-	return render(request, 'baseStrava.html', locals() )
-
-
-	
-def index(request, actif = 1):
-	logger.debug("======> index. URL <" + request.path + ">")
-	# By default, stat by month
-	#actif = 1	
-	if os.environ.get('DEV'):
-		dev = True
-	else:
-		dev = False
-				
-	#check if logged
-	access_token = request.session.get('ACCESS_TOKEN', None) 			
-	if  access_token is not None:
-		isLogged =  True
-		#name="Login"
+	if isLogged:	
+		#retrieve the athlete infos and save it in db
 		athlete = getAthlete(access_token)	
 		if athlete:	
 			# store athlete id in session		
@@ -217,7 +192,46 @@ def index(request, actif = 1):
 			user.updated_date = timezone.now()
 			user.strava_creation_date = make_aware(datetime.datetime.strptime(athlete["created_at"], '%Y-%m-%dT%H:%M:%SZ'),timezone=timezone.utc)
 			user.save()
+		else:
+			logoff(access_token)
+			request.session['ACCESS_TOKEN'] = None
+			#html = f"Error in calling Strava API"
+			name ="Login"		
 		
+		return index(request, actif = 1)
+	else:
+		html = "Login failed ! "
+		request.session['ACCESS_TOKEN'] = None
+
+	#logger.debug(f"session_key : "+ request.session.session_key)
+		
+	return render(request, 'baseStrava.html', locals() )
+
+
+	
+def index(request, actif = 1):
+	logger.debug("======> index. URL <" + request.path + ">")
+	# By default, stat by month
+	#actif = 1	
+	if os.environ.get('DEV'):
+		dev = True
+	else:
+		dev = False
+				
+	#check if logged
+	access_token = request.session.get('ACCESS_TOKEN', None) 			
+	if  access_token is not None:
+		isLogged =  True
+		
+		# retreive user table
+		user_id = request.session.get('user_id', None) 
+		user = User()	
+		try:
+			user = User.objects.get(user_id=user_id)
+		except user.DoesNotExist:
+			user = None
+	
+		if user: 
 			#Retreive strava datas
 			#endDate = make_aware(datetime.datetime.utcnow() +  timedelta(hours=24),timezone=timezone.utc)
 			endDate = datetime.datetime.utcnow() +  timedelta(hours=24)
@@ -237,10 +251,10 @@ def index(request, actif = 1):
 			startDate = endDate - timedelta(days=31)'''
 			
 			#startDate = endDate - timedelta(days=31*12*15)
-			range = retreive_strava_activities(access_token, athlete["id"], startDate, endDate)	
+			range = RetreiveFromDateInterval(access_token, user.user_id, startDate, endDate)	
 			
 			#store the date range in db
-			user = User.objects.get(user_id=int(athlete["id"]))
+			user = User.objects.get(user_id=int(user.user_id))
 			logger.debug("-> result : activity from " + str(range[0]) + " to " + str(range[1]) + ". Number " + str(range[2]))
 			
 			if range[0]:
@@ -255,14 +269,9 @@ def index(request, actif = 1):
 			user.act_number = range[2] if range[2] else 0
 			user.save()
 			
-			request.session['id'] = athlete["id"] 	
-			name = athlete["firstname"] + " " + athlete["lastname"] + " <i class=\"fa fa-caret-down\"></i>"
+			name = user.firstname + " " + user.lastname + " <i class=\"fa fa-caret-down\"></i>"
 			#html = athlete	
-		else:
-			logoff(access_token)
-			request.session['ACCESS_TOKEN'] = None
-			#html = f"Error in calling Strava API"
-			name ="Login"
+
 
 	else:
 		isLogged =  False
