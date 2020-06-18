@@ -135,7 +135,7 @@ class Statist():
 			
 			# Concatenate the 2 dataframes
 			df = pd.concat([existingDf, newDf]).drop_duplicates().reset_index(drop=True)			
-			print("Local bd size changed from " + str(len(existingDf)) + " to " + str(len(df)))
+			logger.debug("Local bd size changed from " + str(len(existingDf)) + " to " + str(len(df)))
 		
 		#Store the dataframe		
 		df.to_parquet(f_name)

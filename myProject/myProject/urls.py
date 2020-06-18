@@ -19,9 +19,10 @@ from django.contrib import admin
 urlpatterns = [
     url('admin/', admin.site.urls),
 	#url('strava/', include('stravaApp.urls')),
+	#url(r'', include('stravaApp.urls')),
+	url(r'myApp/', include('myApp.urls')),
 	url(r'', include('stravaApp.urls')),
-	
-	url(r'', include('myApp.urls')),
 ]
 
 #url('authorization_successful', include('stravaApp.urls')),
+

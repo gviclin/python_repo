@@ -4,6 +4,7 @@ from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
 from django.http import HttpResponse, HttpResponseRedirect,JsonResponse
 from django.conf import settings
+from .forms import User
 
 from loguru import logger
 
@@ -164,6 +165,11 @@ def index(request, actif = 1):
 		#name="Login"
 		athlete = getAthlete(access_token)	
 		if athlete:		
+			# store athlete infos in DB
+			user = User.objects.get(user_id=4)
+			if user:
+				logger.debug("find in db : " + user)
+		
 			#Retreive strava datas
 			endDate = datetime.datetime.now() +  timedelta(hours=24) 
 			startDate = endDate - timedelta(days=31)
