@@ -36,7 +36,7 @@ class Statist():
 		-------
 		todo
 		"""
-		logger.debug("Compute the local db from", startdate.strftime("%Y-%m-%d %H:%M:%S"), "to", enddate.strftime("%Y-%m-%d %H:%M:%S"))
+		logger.debug("Compute the local db from <" + str(startdate) + "> to <" + str(enddate) + ">")
 		pp = pprint.PrettyPrinter(indent=4)
 		# retreive the directory
 		activities_dir = os.path.join(self.strava_dir, f"summary_activities_{athlete_id}")
@@ -54,9 +54,10 @@ class Statist():
 			if path.is_file():
 				#print("file : ", str(path))
 				with open(path) as f:
-					file_data = json.load(f)				
+					file_data = json.load(f)	
 					
-					dt1 = datetime.datetime.strptime(file_data['start_date_local'], '%Y-%m-%dT%H:%M:%SZ')
+					# Renvoie un datetime correspondant à la chaîne date_string, analysée conformément à format.
+					dt1 = datetime.datetime.strptime(file_data['start_date'], '%Y-%m-%dT%H:%M:%SZ')
 					
 					if dt1 > startdate and dt1 < enddate:
 						#self.logger.debug("open file number : " + str(i))
@@ -77,7 +78,7 @@ class Statist():
 						file_data.pop('kudos_count', None)
 						file_data.pop('max_speed', None)		
 						file_data.pop('max_watts', None)
-						file_data.pop('start_date', None)		
+						file_data.pop('start_date_local', None)		
 						file_data.pop('start_latlng', None)
 						file_data.pop('timezone', None)		
 						#file_data.pop('total_elevation_gain', None)
@@ -97,57 +98,79 @@ class Statist():
 							break'''
 		
 		#concatenate all dataframe
-		newDf = pd.concat(list)
+		newDf = pd.DataFrame()
+		if list:		
+			newDf = pd.concat(list)
 
-		newDf['date'] =  pd.to_datetime(newDf['start_date_local'], format='%Y-%m-%dT%H:%M:%SZ')
-		newDf.drop('start_date_local', axis=1,inplace=True)
+			newDf['start_date'] =  pd.to_datetime(newDf['start_date'], format='%Y-%m-%dT%H:%M:%SZ')
+			#newDf.drop('start_date', axis=1,inplace=True)
+			
+			#logger.debug(newDf.info(verbose=True))
+			
+			#add year / month columns
+			newDf['year'] = pd.DatetimeIndex(newDf['start_date']).year
+			newDf['month'] = pd.DatetimeIndex(newDf['start_date']).month
+			
+			newDf['month'] = newDf['month'].apply(str)
+			newDf['year'] = newDf['year'].apply(str)
+			
+			newDf.sort_values(by='start_date', inplace=True, ascending=True)
+			
+			newDf['distance'] = round(newDf['distance'] / 1000,3)
+			
+			#newDf = newDf.reindex(columns=sorted(newDf.columns))
+			column_list = ['id', 'start_date','name', 'distance','elapsed_time','moving_time']
+			list_col = (column_list + [a for a in newDf.columns if a not in column_list] ) 
+			#print(str(list_col))
+			newDf = newDf.reindex(columns=list_col)		
+			newDf.set_index("id")
+			
+		f_parquet = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")		
 		
-		#add year / month columns
-		newDf['year'] = pd.DatetimeIndex(newDf['date']).year
-		newDf['month'] = pd.DatetimeIndex(newDf['date']).month
-		
-		newDf['month'] = newDf['month'].apply(str)
-		newDf['year'] = newDf['year'].apply(str)
-		
-		newDf.sort_values(by='date', inplace=True, ascending=True)
-		
-		newDf['distance'] = round(newDf['distance'] / 1000,3)
-		
-		#newDf = newDf.reindex(columns=sorted(newDf.columns))
-		column_list = ['id', 'date','name', 'distance','elapsed_time','moving_time']
-		list_col = (column_list + [a for a in newDf.columns if a not in column_list] ) 
-		#print(str(list_col))
-		newDf = newDf.reindex(columns=list_col)		
-		newDf.set_index("id")
-		
-		f_name = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")		
-		
-		if not os.path.exists(f_name):
-			#self.logger.debug("path ",f_name,"does not exist !")
+		if not os.path.exists(f_parquet):
+			#logger.debug("Local bd empty (not parquet file)")
 			df = newDf
+			logger.debug("Local bd size changed from " + str(0) + " to " + str(len(df)))
 		else:
 			# Existing dataframe
-			existingDf = pd.read_parquet(f_name)	
+			existingDf = pd.read_parquet(f_parquet)	
 			
-			# Remove datas belong to the given interval
-			mask = (existingDf['date'] < startdate) | (existingDf['date'] >= enddate)
-			existingDf=existingDf.loc[mask]
-			
-			# Concatenate the 2 dataframes
-			df = pd.concat([existingDf, newDf]).drop_duplicates().reset_index(drop=True)			
-			logger.debug("Local bd size changed from " + str(len(existingDf)) + " to " + str(len(df)))
+			if not newDf.empty:			
+				if not existingDf.empty:			
+					oldSize = len(existingDf)
+					# Remove datas belong to the given interval
+					mask = (existingDf['start_date'] <= startdate) | (existingDf['start_date'] >= enddate)
+					existingDf=existingDf.loc[mask]
+					#logger.debug("Filter local bd size from " + str(oldSize) + " to " + str(len(existingDf)))
+					
+					# Concatenate the 2 dataframes
+					df = pd.concat([existingDf, newDf]).drop_duplicates().reset_index(drop=True)			
+					logger.debug("Local bd size changed from " + str(len(existingDf)) + " to " + str(len(df)))
+				else:
+					existingDf = newDf
+			else:
+				logger.debug("Local bd size not changed : " + str(len(existingDf)) + " elements")
 		
 		#Store the dataframe		
-		df.to_parquet(f_name)
+		existingDf.to_parquet(f_parquet)
 		
 		#Store the dataframe in excell file
-		df.to_excel(os.path.join(self.strava_dir, f"global_data_{athlete_id}.xlsx"))
+		existingDf.to_excel(os.path.join(self.strava_dir, f"global_data_{athlete_id}.xlsx"))
 		
 		#Store the dataframe in html file
-		df.to_html(os.path.join(self.strava_dir, f"global_data_{athlete_id}.html"))
+		existingDf.to_html(os.path.join(self.strava_dir, f"global_data_{athlete_id}.html"))
 		
-		
-		
+		#return the date range of the datas
+		if not existingDf.empty:
+			return [min(existingDf['start_date']),
+					max(existingDf['start_date']),
+					len(existingDf)]
+		else:
+			return [None,
+					None,
+					None]
+					
+					
 	def Stat_dist_by_month(self,athlete_id, activityType):
 		""" Compute_the_db 
 		activityType : "Run", "Hike", "VirtualRide", "VirtualRun", "Walk","Ride"
@@ -157,96 +180,98 @@ class Statist():
 		"""
 		
 		# Read global data file
-		f_name = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")
-		df = pd.read_parquet(f_name)
+		f_parquet = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")
+		df = pd.read_parquet(f_parquet)
 		
-		# Filter by type of activity
-		filter = df["type"].isin(activityType)
-		df_type = df[filter]		
-	
-		df_by_month = df_type.groupby(['year','month']).sum()
+		df_dist = pd.DataFrame()
+		if not df.empty:		
+			# Filter by type of activity
+			filter = df["type"].isin(activityType)
+			df_type = df[filter]		
 		
-		df_by_month = df_by_month[["distance","elapsed_time","moving_time","total_elevation_gain"]]
-		
-		df_by_month.drop('elapsed_time', axis=1,inplace=True)
-		
-		df_by_month["avg_speed"] = round(3600 * df_by_month["distance"] / df_by_month["moving_time"],1)
-		df_by_month["avg_elev_by_10km"] = round(10 * df_by_month["total_elevation_gain"] / df_by_month["distance"],0)
-		'''
-		df_by_month.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_by_month_{athlete_id}.html"))
-		df_by_month.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_by_month_{athlete_id}.xlsx"))
-		'''
-		#print(tabulate(df, headers='keys', tablefmt='psql'))
-		#pp.pprint(file_data)		
-		#print(df.dtypes)
+			df_by_month = df_type.groupby(['year','month']).sum()
+			
+			df_by_month = df_by_month[["distance","elapsed_time","moving_time","total_elevation_gain"]]
+			
+			df_by_month.drop('elapsed_time', axis=1,inplace=True)
+			
+			df_by_month["avg_speed"] = round(3600 * df_by_month["distance"] / df_by_month["moving_time"],1)
+			df_by_month["avg_elev_by_10km"] = round(10 * df_by_month["total_elevation_gain"] / df_by_month["distance"],0)
+			'''
+			df_by_month.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_by_month_{athlete_id}.html"))
+			df_by_month.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_by_month_{athlete_id}.xlsx"))
+			'''
+			#print(tabulate(df, headers='keys', tablefmt='psql'))
+			#pp.pprint(file_data)		
+			#print(df.dtypes)
 
-		#stat by month and year
-		df_dist = df_by_month[["distance"]]	
-		df_dist.reset_index(level="year", inplace=True)
-		df_dist.reset_index(level="month", inplace=True)		
-		df_dist = df_dist.pivot(index='year', columns='month', values='distance')
-		#df_dist.reset_index(inplace=True)	
+			#stat by month and year
+			df_dist = df_by_month[["distance"]]	
+			df_dist.reset_index(level="year", inplace=True)
+			df_dist.reset_index(level="month", inplace=True)		
+			df_dist = df_dist.pivot(index='year', columns='month', values='distance')
+			#df_dist.reset_index(inplace=True)	
+			
+			#add annual stat
+			df_dist["total"] = df_dist.sum(axis=1)
+			
+			df_dist.fillna(0, inplace=True)
+			df_dist = df_dist.round(1)
+			
 		
-		#add annual stat
-		df_dist["total"] = df_dist.sum(axis=1)
-		
-		df_dist.fillna(0, inplace=True)
-		df_dist = df_dist.round(1)
-		
-	
-		'''df=cf.datagen.lines(4)
-		fig = df.iplot(asFigure=True, hline=[2,4], vline=['2015-02-10'])
-		fig.show()'''
-				
-		#df_dist["year"] = pd.to_numeric(df_dist["year"])
-		#df_dist.set_index("year")
-		df_dist.drop('total', axis=1,inplace=True)
-		df_dist = df_dist.T
-		df_dist.reset_index(inplace=True)
-		df_dist["month"] = pd.to_numeric(df_dist["month"])	
-		df_dist.sort_values(by='month',inplace =True)		
-		
-		#Create a column with the month string
-		df_dist['month_str'] = df_dist.apply(lambda row: datetime.date(1900, int(row["month"]), 1).strftime('%B'), axis=1)
-		df_dist.set_index("month_str",inplace=True)
-		df_dist.loc["Total"] = df_dist.sum()
-		
-		df_dist.drop('month',inplace=True,axis=1)
-		
-		#os.remove(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.xlsx"))
-		
-		df_dist.to_parquet(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.parquet"))
-		df_dist.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.html"))
-		df_dist.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.xlsx"))
-		'''
-		print("")
-		print("type :",activityType)
-		print(df_dist.info(verbose=True))
-		#print(df_dist)
-		print(tabulate(df_dist, headers='keys', tablefmt='psql'))
-		
-		series_x = df_dist["month_str"]
-		df_dist.drop("month", axis=1,inplace=True)
-		list_month = list(df_dist.columns)
-		list_month.remove("month_str")
-				
-		fig = df_dist.iplot(asFigure=True, xTitle="Month",
-		yTitle="Distance", title="By month", x='month_str',y=list_month,
-			mode = "lines+markers")
-		fig.show()
-		'''
-		'''		
-		fig, ax = plt.subplots()
-		ax.set_title('Month statistics')
-		ax.plot(
-				series_x, df_dist, 'x-'
-				)
-		ax.legend(list(df_dist.columns.values), loc='upper right')
-		fig.autofmt_xdate()
-		plt.grid(True)			
-		plt.show()'''
-		
-		#self.logger.debug("end of stat_by_year")
+			'''df=cf.datagen.lines(4)
+			fig = df.iplot(asFigure=True, hline=[2,4], vline=['2015-02-10'])
+			fig.show()'''
+					
+			#df_dist["year"] = pd.to_numeric(df_dist["year"])
+			#df_dist.set_index("year")
+			df_dist.drop('total', axis=1,inplace=True)
+			df_dist = df_dist.T
+			df_dist.reset_index(inplace=True)
+			df_dist["month"] = pd.to_numeric(df_dist["month"])	
+			df_dist.sort_values(by='month',inplace =True)		
+			
+			#Create a column with the month string
+			df_dist['month_str'] = df_dist.apply(lambda row: datetime.date(1900, int(row["month"]), 1).strftime('%B'), axis=1)
+			df_dist.set_index("month_str",inplace=True)
+			df_dist.loc["Total"] = df_dist.sum()
+			
+			df_dist.drop('month',inplace=True,axis=1)
+			
+			#os.remove(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.xlsx"))
+			
+			df_dist.to_parquet(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.parquet"))
+			df_dist.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.html"))
+			df_dist.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(activityType)}_distance_{athlete_id}.xlsx"))
+			'''
+			print("")
+			print("type :",activityType)
+			print(df_dist.info(verbose=True))
+			#print(df_dist)
+			print(tabulate(df_dist, headers='keys', tablefmt='psql'))
+			
+			series_x = df_dist["month_str"]
+			df_dist.drop("month", axis=1,inplace=True)
+			list_month = list(df_dist.columns)
+			list_month.remove("month_str")
+					
+			fig = df_dist.iplot(asFigure=True, xTitle="Month",
+			yTitle="Distance", title="By month", x='month_str',y=list_month,
+				mode = "lines+markers")
+			fig.show()
+			'''
+			'''		
+			fig, ax = plt.subplots()
+			ax.set_title('Month statistics')
+			ax.plot(
+					series_x, df_dist, 'x-'
+					)
+			ax.legend(list(df_dist.columns.values), loc='upper right')
+			fig.autofmt_xdate()
+			plt.grid(True)			
+			plt.show()'''
+			
+			#self.logger.debug("end of stat_by_year")
 		
 		return df_dist
 		
@@ -260,27 +285,27 @@ class Statist():
 		Make stat by month and activity type
 		"""
 		# Read global data file
-		f_name = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")
-		df = pd.read_parquet(f_name)
+		f_parquet = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")
+		df = pd.read_parquet(f_parquet)
 		
 		# Filter by type of activity
 		filter = df["type"].isin(activityType)
 		df = df[filter]	
 		
-		#df = df[["year","month","date","distance","elapsed_time","moving_time","total_elevation_gain"]]
-		df = df[["year","month","date","distance","id"]]
+		#df = df[["year","month","start_date","distance","elapsed_time","moving_time","total_elevation_gain"]]
+		df = df[["year","month","start_date","distance","id"]]
 		
 		df.id = df.id.astype(int)
 		
-		df.sort_values(by='date', inplace=True, ascending=True)
+		df.sort_values(by='start_date', inplace=True, ascending=True)
 		
-		df.set_index("date",inplace=True, drop=False)
+		df.set_index("start_date",inplace=True, drop=False)
 		
 		df['cumul_dist'] = df.groupby(df.index.year)["distance"].cumsum()		
 		
-		df["date"] = df.apply(lambda row:  row["date"].replace(year = 1904), axis=1)
+		df["start_date"] = df.apply(lambda row:  row["start_date"].replace(year = 1904), axis=1)
 		
-		df = df[["year","month","date","cumul_dist","distance","id"]]
+		df = df[["year","month","start_date","cumul_dist","distance","id"]]
 		
 		#distance goal
 		for goal in dist_goal_list:
@@ -296,8 +321,8 @@ class Statist():
 			result['month'] = result['month'].apply(str)
 			result['year'] = strGoal
 			result['id'] = 0		
-			result.rename({'index': 'date'}, axis=1, inplace=True)
-			result.set_index(keys="date", inplace=True, drop=False)			
+			result.rename({'index': 'start_date'}, axis=1, inplace=True)
+			result.set_index(keys="start_date", inplace=True, drop=False)			
 			df = pd.concat([df,result])
 		'''
 		print("")
@@ -313,7 +338,7 @@ class Statist():
 		
 		fig = px.line(
 			df,
-			 x="date",
+			 x="start_date",
 			  y="cumul_dist",
 			  line_group="year",
 			  color="year",
@@ -359,7 +384,7 @@ class Statist():
 				title = "Month",
 				nticks =12
 				#tickmode = 'linear',
-				#type="date"
+				#type="start_date"
 			),
 			yaxis = dict(
 				title = "Cumul Km",

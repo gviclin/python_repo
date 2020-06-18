@@ -103,6 +103,12 @@ class StravaIO():
 		nbElt = len(_fetched)
 		list_activities.extend(_fetched)
 		logger.debug("Page " + str(page) + " Fetched " + str(len(_fetched)))
+		'''o = 1
+		for i in _fetched:
+			_dict = i.to_dict()
+			logger.debug(" - Activity " + str(o) + " : " + str(_dict["start_date"]))
+			o = o+1'''
+			
 		while nbElt>0:
 			
 			page+=1

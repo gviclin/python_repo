@@ -68,11 +68,9 @@ def retreive_strava_activities(access_token, athlete_id, startdate, startbefore)
 	-------
 	activity: dataframe object
 	"""
-	
 	access = stravaio.StravaIO(access_token=access_token)
 		
-	logger.debug("Retreive strava activities from", startdate.strftime("%Y-%m-%d %H:%M:%S"), "to", startbefore.strftime("%Y-%m-%d %H:%M:%S"))
-
+	logger.debug("Retreive strava activities from <" + str(startdate) + "> to <" + str(startbefore) + ">")
 	# Get list of athletes activities since a given date (after) given in a human friendly format.
 	# Kudos to [Maya: Datetimes for Humans(TM)](https://github.com/kennethreitz/maya)
 	# Returns a list of [Strava SummaryActivity](https://developers.strava.com/docs/reference/#api-models-SummaryActivity) objects
@@ -119,7 +117,7 @@ def retreive_strava_activities(access_token, athlete_id, startdate, startbefore)
 		print("stream id : ",a.id)'''
 
 	stat = Statist(logger)
-	stat.Compute_the_local_db(athlete_id, startdate, startbefore)
+	return stat.Compute_the_local_db(athlete_id, startdate, startbefore)
 
 
 def isStreamStored(activity_id):

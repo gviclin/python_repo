@@ -8,17 +8,17 @@ class User(models.Model):
 	user_id = models.IntegerField(primary_key=True)
 	firstname = models.CharField(max_length=50)
 	lastname = models.CharField(max_length=50)
-	weight = models.FloatField()
+	weight = models.FloatField(null=True)
 	sex = models.CharField(max_length=50)
 	country = models.CharField(max_length=50)
 	state = models.CharField(max_length=50)
 	city = models.CharField(max_length=50)
-	follower_count = models.IntegerField()
-	friend_count = models.IntegerField()
+	follower_count = models.IntegerField(null=True)
+	friend_count = models.IntegerField(null=True)
 	measurement_preference = models.CharField(max_length=50)
-	ftp = models.IntegerField()
+	ftp = models.IntegerField(null=True)
 	
-	created_date = models.DateTimeField(
+	updated_date = models.DateTimeField(
 		default=timezone.now)
 			
 	strava_creation_date = models.DateTimeField(
@@ -29,6 +29,11 @@ class User(models.Model):
 			
 	last_activity_date = models.DateTimeField(
 		blank=True, null=True)
+		
+	act_number = models.IntegerField(null=True)
+	
+	year_run_objective = models.IntegerField()
+	year_ride_objective = models.IntegerField()
 		
 	# Metadata
 	class Meta: 

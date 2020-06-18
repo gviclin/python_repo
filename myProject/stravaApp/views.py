@@ -6,7 +6,11 @@ from django.http import HttpResponse, HttpResponseRedirect,JsonResponse
 from django.conf import settings
 from .models import User
 
+from datetime import datetime, tzinfo
+import pytz
+
 from loguru import logger
+from django.utils.timezone import make_aware
 
 import os
 import sys
@@ -26,6 +30,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 def post_ajax(request):
+	logger.debug("======> post_ajax. URL <" + request.path + ">")
 	activityType = "No value"
 	statType = "No value"
 	response = {"log":""}
@@ -96,6 +101,7 @@ def post_ajax(request):
 
 # Create your views here.
 def viewLogin(request):
+	logger.debug("======> viewLogin. URL <" + request.path + ">")
 	actif = 3	
 	if os.environ.get('DEV'):
 		dev = True
@@ -151,6 +157,7 @@ def viewLogin(request):
 
 	
 def index(request, actif = 1):
+	logger.debug("======> index. URL <" + request.path + ">")
 	# By default, stat by month
 	#actif = 1	
 	if os.environ.get('DEV'):
@@ -172,31 +179,62 @@ def index(request, actif = 1):
 			except user.DoesNotExist:
 				user = None
 			
-			if user:
-				logger.debug("user <" + str(user) + "> id <" + athlete["id"] + "> find in db")
-			else:
-				logger.debug("user <" + athlete["firstname"] + "> id <" + str(athlete["id"]) + "> NOT find in db")
-				# Créer un nouvel enregistrement 
+			if not user:
 				user = User()
 				user.user_id = athlete["id"]
-				user.firstname = athlete["firstname"]
-				user.lastname = athlete["lastname"]
-				user.weight = athlete["weight"]
-				user.sex = athlete["sex"]
-				user.country = athlete["country"]
-				user.state = athlete["state"]
-				user.city = athlete["city"]
-				user.follower_count = int(athlete["follower_count"])
-				user.friend_count = int(athlete["friend_count"])
-				user.measurement_preference = athlete["measurement_preference"]
-				user.ftp = int(athlete["ftp"])
-				user.save()
+				
+			user.django_user = request.user
+			user.firstname = athlete["firstname"]
+			user.lastname = athlete["lastname"]
+			user.weight = athlete["weight"]
+			user.sex = athlete["sex"] if athlete["sex"] else ""
+			user.country = athlete["country"]
+			user.state = athlete["state"]
+			user.city = athlete["city"]
+			user.follower_count = int(athlete["follower_count"])
+			user.friend_count = int(athlete["friend_count"])
+			user.measurement_preference = athlete["measurement_preference"]
+			user.ftp = int(athlete["ftp"] if athlete["ftp"] else -1)
+			user.updated_date = timezone.now()
+			user.strava_creation_date = make_aware(datetime.datetime.strptime(athlete["created_at"], '%Y-%m-%dT%H:%M:%SZ'),timezone=timezone.utc)
+			user.save()
 		
 			#Retreive strava datas
-			endDate = datetime.datetime.now() +  timedelta(hours=24) 
-			startDate = endDate - timedelta(days=31)
+			#endDate = make_aware(datetime.datetime.utcnow() +  timedelta(hours=24),timezone=timezone.utc)
+			endDate = datetime.datetime.utcnow() +  timedelta(hours=24)
+			#logger.debug("endDate : " + endDate.tzname()) 			
+			
+			if user.last_activity_date is not None:		
+				#logger.debug("--> last_activity_date is not null")			
+				startDate = user.last_activity_date  +  timedelta(seconds=1)
+				#unset the timezone !!!
+				startDate = startDate.replace(tzinfo=None)
+			else:
+				#logger.debug("--> last_activity_date is null") #timezone=timezone.utc
+				startDate = datetime.datetime(2000, 1, 1, 0, 0 ,0)
+
+			
+			'''endDate = datetime.datetime.utcnow() +  timedelta(hours=24) 
+			startDate = endDate - timedelta(days=31)'''
+			
 			#startDate = endDate - timedelta(days=31*12*15)
-			retreive_strava_activities(access_token, athlete["id"], startDate, endDate)	
+			range = retreive_strava_activities(access_token, athlete["id"], startDate, endDate)	
+			
+			#store the date range in db
+			user = User.objects.get(user_id=int(athlete["id"]))
+			logger.debug("-> result : activity from " + str(range[0]) + " to " + str(range[1]) + ". Number " + str(range[2]))
+			
+			if range[0]:
+				user.first_activity_date = make_aware(range[0], timezone=timezone.utc)
+			else:
+				user.first_activity_date = None
+			if range[1]:
+				user.last_activity_date = make_aware(range[1], timezone=timezone.utc)
+			else:
+				user.last_activity_date = None
+			
+			user.act_number = range[2] if range[2] else 0
+			user.save()
 			
 			request.session['id'] = athlete["id"] 	
 			name = athlete["firstname"] + " " + athlete["lastname"] + " <i class=\"fa fa-caret-down\"></i>"
@@ -226,7 +264,7 @@ def generateGraph(id, list, objList):
 		# objectif line
 		if line.find("km") != -1:
 			graph = go.Scatter(
-				x=dfFilter["date"],
+				x=dfFilter["start_date"],
 				y=dfFilter["cumul_dist"],
 				name=line,
 				opacity=1,
@@ -245,7 +283,7 @@ def generateGraph(id, list, objList):
 		else:
 			# Normal line
 			graph = go.Scatter(
-				x=dfFilter["date"],
+				x=dfFilter["start_date"],
 				y=dfFilter["cumul_dist"],
 				customdata=dfFilter["distance"],
 				name=line,
@@ -281,7 +319,7 @@ def generateGraph(id, list, objList):
 			title = "Month",
 			nticks =12
 			#tickmode = 'linear',
-			#type="date"
+			#type="start_date"
 			),
 			yaxis = dict(
 			title = "Cumul Km",
