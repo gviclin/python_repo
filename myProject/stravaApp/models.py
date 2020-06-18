@@ -3,8 +3,9 @@ from django.utils import timezone
 
 
 class User(models.Model):
+	# Fields
 	django_user = models.ForeignKey('auth.User',on_delete=models.CASCADE)
-	user_id = models.IntegerField()
+	user_id = models.IntegerField(primary_key=True)
 	firstname = models.CharField(max_length=50)
 	lastname = models.CharField(max_length=50)
 	weight = models.FloatField()
@@ -28,10 +29,15 @@ class User(models.Model):
 			
 	last_activity_date = models.DateTimeField(
 		blank=True, null=True)
+		
+	# Metadata
+	class Meta: 
+		ordering = ['-user_id']
 	
 	def publish(self):
 		self.published_date = timezone.now()
 		self.save()
 
 	def __str__(self):
+		#String for representing the MyModelName object (in Admin site etc.).
 		return self.firstname + " " + self.lastname

@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect,JsonResponse
 from django.conf import settings
-from .forms import User
+from .models import User
 
 from loguru import logger
 
@@ -166,9 +166,31 @@ def index(request, actif = 1):
 		athlete = getAthlete(access_token)	
 		if athlete:		
 			# store athlete infos in DB
-			user = User.objects.get(user_id=4)
+			user = User()
+			try:
+				user = User.objects.get(user_id=int(athlete["id"]))
+			except user.DoesNotExist:
+				user = None
+			
 			if user:
-				logger.debug("find in db : " + user)
+				logger.debug("user <" + str(user) + "> id <" + athlete["id"] + "> find in db")
+			else:
+				logger.debug("user <" + athlete["firstname"] + "> id <" + str(athlete["id"]) + "> NOT find in db")
+				# Créer un nouvel enregistrement 
+				user = User()
+				user.user_id = athlete["id"]
+				user.firstname = athlete["firstname"]
+				user.lastname = athlete["lastname"]
+				user.weight = athlete["weight"]
+				user.sex = athlete["sex"]
+				user.country = athlete["country"]
+				user.state = athlete["state"]
+				user.city = athlete["city"]
+				user.follower_count = int(athlete["follower_count"])
+				user.friend_count = int(athlete["friend_count"])
+				user.measurement_preference = athlete["measurement_preference"]
+				user.ftp = int(athlete["ftp"])
+				user.save()
 		
 			#Retreive strava datas
 			endDate = datetime.datetime.now() +  timedelta(hours=24) 

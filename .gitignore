@@ -136,3 +136,4 @@ access_token
 Pipfile
 Pipfile.lock
 myProject/static
+myProject/stravaApp/migrations
