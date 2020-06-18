@@ -138,14 +138,14 @@ class Statist():
 			if not newDf.empty:			
 				if not existingDf.empty:			
 					oldSize = len(existingDf)
+					
 					# Remove datas belong to the given interval
 					mask = (existingDf['start_date'] <= startdate) | (existingDf['start_date'] >= enddate)
 					existingDf=existingDf.loc[mask]
-					#logger.debug("Filter local bd size from " + str(oldSize) + " to " + str(len(existingDf)))
 					
 					# Concatenate the 2 dataframes
-					df = pd.concat([existingDf, newDf]).drop_duplicates().reset_index(drop=True)			
-					logger.debug("Local bd size changed from " + str(len(existingDf)) + " to " + str(len(df)))
+					existingDf = pd.concat([existingDf, newDf]).drop_duplicates().reset_index(drop=True)			
+					logger.debug("Local bd size changed from " + str(oldSize) + " to " + str(len(existingDf)))
 				else:
 					existingDf = newDf
 			else:
@@ -155,11 +155,11 @@ class Statist():
 		existingDf.to_parquet(f_parquet)
 		
 		#Store the dataframe in excell file
-		existingDf.to_excel(os.path.join(self.strava_dir, f"global_data_{athlete_id}.xlsx"))
-		
+		#existingDf.to_excel(os.path.join(self.strava_dir, f"global_data_{athlete_id}.xlsx"))
+		#logger.debug("---> 2")
 		#Store the dataframe in html file
-		existingDf.to_html(os.path.join(self.strava_dir, f"global_data_{athlete_id}.html"))
-		
+		#existingDf.to_html(os.path.join(self.strava_dir, f"global_data_{athlete_id}.html"))
+		#logger.debug("---> 3")
 		#return the date range of the datas
 		if not existingDf.empty:
 			return [min(existingDf['start_date']),

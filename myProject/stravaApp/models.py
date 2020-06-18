@@ -32,8 +32,8 @@ class User(models.Model):
 		
 	act_number = models.IntegerField(null=True)
 	
-	year_run_objective = models.IntegerField()
-	year_ride_objective = models.IntegerField()
+	year_run_objective = models.IntegerField(default=500)
+	year_ride_objective = models.IntegerField(default=500)
 		
 	# Metadata
 	class Meta: 

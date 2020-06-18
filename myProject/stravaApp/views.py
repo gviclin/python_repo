@@ -39,6 +39,15 @@ def post_ajax(request):
 	
 	#check if logged
 	access_token = request.session.get('ACCESS_TOKEN', None) 
+	
+	# retreive user table
+	user_id = request.session.get('user_id', None) 
+	user = User()	
+	try:
+		user = User.objects.get(user_id=user_id)
+	except user.DoesNotExist:
+		user = None
+	
 	id = request.session.get('id', None) 	
 	if  access_token is not None and id is not None:	
 	
@@ -63,10 +72,18 @@ def post_ajax(request):
 				
 		elif statType=="year":
 			if activityType.find("run")!=-1:
-				objList = [1400,1600]
+				if user:
+					objList = [user.year_run_objective]
+				else:
+					objList = [500]
+				#objList = [1400,1600]
 				listType.append("Run")
 			if activityType.find("ride")!=-1:
-				objList = [6000,7000]
+				if user:
+					objList = [user.year_ride_objective]
+				else:
+					objList = [500]
+				#objList = [6000,7000]
 				listType.append("Ride")
 				listType.append("VirtualRide")
 				
@@ -171,7 +188,9 @@ def index(request, actif = 1):
 		isLogged =  True
 		#name="Login"
 		athlete = getAthlete(access_token)	
-		if athlete:		
+		if athlete:	
+			# store athlete id in session		
+			request.session['user_id'] = int(athlete["id"])	
 			# store athlete infos in DB
 			user = User()
 			try:
