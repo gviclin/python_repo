@@ -28,7 +28,7 @@
 		<button class="dropbtn" id="loginLink">{% autoescape off %}{{name}}{% endautoescape %}
 		</button>
 		<div class="dropdown-content">
-		  <a id="settingLink">Setting</a>
+		  	<a href="{% url 'viewSettingPost' %}"id="settingLink">Setting</a>
 		  <a id="logoutLink">Logout</a>
 		</div>
 	  </div> 
@@ -113,10 +113,10 @@ sessionStorage.setItem("isLogged", "0");
 		}
 	});
 	
-	$("#settingLink").click(function(){
-		sessionStorage.setItem("pageType", "setting");
+	$("#settingLink").click(function(){		
+		/*sessionStorage.setItem("pageType", "setting");
 		sendPostMessage(GetActivityType(), "setting");	
-		updateMenu();
+		updateMenu();*/
 	});
 	
 	$("#logoutLink").click(function(){

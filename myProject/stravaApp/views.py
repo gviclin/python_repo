@@ -5,6 +5,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect,JsonResponse
 from django.conf import settings
 from .models import User
+from .forms import PostSettings
 
 from datetime import datetime, tzinfo
 import pytz
@@ -28,9 +29,48 @@ from stravaApp.stravaInterface import *
 
 from django.views.decorators.csrf import csrf_exempt
 
+
+
+def viewSettingPost(request):
+	logger.debug("======> viewSettingPost. URL <" + request.path + ">")
+	actif = 3	# login active
+	isLogged = True #logged because clic on setting bouton
+	name = request.session.get('name', 'no_name') 
+	if os.environ.get('DEV'):
+		dev = True
+	else:
+		dev = False
+				
+	#check if logged
+	access_token = request.session.get('ACCESS_TOKEN', None) 			
+	if  access_token is not None:
+		isLogged =  True
+		
+		# retreive user table
+		user_id = request.session.get('user_id', None) 
+		user = User()	
+		try:
+			user = User.objects.get(user_id=user_id)
+		except user.DoesNotExist:
+			user = None
+	
+	if user: 
+		if request.method == "POST":
+			form = PostSettings(request.POST)
+			if form.is_valid():
+				data = form.save(commit=False)
+				user.year_run_objective = data.year_run_objective
+				user.year_ride_objective = data.year_ride_objective
+				user.save()
+				return redirect('viewSettingPost')
+		
+		else:
+			form = PostSettings(instance=user)
+			
+	return render(request, 'settingsStrava.html', {'form': form, 'actif': actif, 'isLogged': isLogged, 'name': name})
+
 @csrf_exempt
 def post_ajax(request):
-	logger.debug("======> post_ajax. URL <" + request.path + ">")
 	activityType = "No value"
 	statType = "No value"
 	response = {"log":""}
@@ -57,6 +97,8 @@ def post_ajax(request):
 			if 'pageType' in request.POST:
 				statType = request.POST['pageType']	
 				response["log"]  = response["log"] + " Stat type : <" + statType  +">"
+				
+		logger.debug("======> post_ajax. URL <" + request.path + ">. Activity type <" + activityType + ">. Page Type <" + statType + ">")
 			
 		if statType=="month":
 			if activityType.find("run")!=-1:
@@ -270,6 +312,7 @@ def index(request, actif = 1):
 			user.save()
 			
 			name = user.firstname + " " + user.lastname + " <i class=\"fa fa-caret-down\"></i>"
+			request.session['name'] = name	
 			#html = athlete	
 
 

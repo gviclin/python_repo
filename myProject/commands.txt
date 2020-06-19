@@ -29,3 +29,11 @@ gunicorn myProject.wsgi:application
 sudo sed -i 's/quiet splash/quiet splash loglevel=3/' /etc/default/grub
 sudo update-grub
 
+#deactivate sleep mode
+https://gist.github.com/bzerangue/e64c7122129b628302046fa8702dddd2
+sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+sudo systemctl unmask sleep.target suspend.target hibernate.target hybrid-sleep.target
+https://www.dell.com/support/article/fr-fr/how12691/comment-d%C3%A9sactiver-la-mise-en-veille-et-configurer-les-param%C3%A8tres-d-alimentation-du-capot-pour-ubuntu-ou-red-hat-enterprise-linux-7?lang=fr
+
+# extra 
+sudo apt install ubuntu-restricted-extras
