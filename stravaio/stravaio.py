@@ -77,8 +77,26 @@ class StravaIO():
 		activity: Activity ojbect
 		"""
 		return Activity(self.activities_api.get_activity_by_id(id, include_all_efforts=include_all_efforts))
+		
+	def get_one_page_activities(self, after=0, before=0, page=0,per_page=30, list_activities=None):
+			"""List all activities after a given date
+		
+		Parameters
+		----------
+		after: int, str or datetime object
+			If integer, the time since epoch is assumed
+			If str, the maya.parse() compatible date string is expected e.g. iso8601 or 2018-01-01 or 20180101
+			If datetime, the datetime object is expected
 
-	def get_logged_in_athlete_activities(self, after=0, before=0, page=0,per_page=30, list_activities=None):
+		Returns
+		-------
+		list_activities: list
+			List of SummaryActivity objects
+		"""
+		if list_activities is None:
+			list_activities = []
+
+	def get_logged_in_athlete_activities(self, after=0, before=0, page=0,per_page=100, list_activities=None):
 		"""List all activities after a given date
 		
 		Parameters
@@ -98,7 +116,10 @@ class StravaIO():
 		after = date_to_epoch(after)
 		before = date_to_epoch(before)
 		
-		page=1
+		if page=0:
+			page=1
+			
+		
 		_fetched = self.activities_api.get_logged_in_athlete_activities(after=after, before=before, page=page,per_page=per_page)
 		nbElt = len(_fetched)
 		list_activities.extend(_fetched)

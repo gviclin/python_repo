@@ -199,12 +199,14 @@ def viewLogin(request):
 		temp_access_token = request.session.get('ACCESS_TOKEN', None) 
 				
 		if  temp_access_token is None:
-					
+						
 			'''# Number of visits to this view, as counted in the session variable.
 			num_visits = request.session.get('num_visits', 0)
 			request.session['num_visits'] = num_visits + 1'''
 			
 			access_token = login(user_code)
+			
+			logger.debug(f"New access_token <" + str(access_token) + ">")
 			
 			if access_token is not None or not access_token:			
 				#store the activity instance
@@ -214,6 +216,7 @@ def viewLogin(request):
 				isLogged =  False
 		
 		else:
+			logger.debug(f" access_token <" + str(temp_access_token) + ">")
 			access_token = 	temp_access_token			
 
 	else:
@@ -312,31 +315,40 @@ def index(request, actif = 1):
 			startDate = endDate - timedelta(days=31)'''
 			
 			#startDate = endDate - timedelta(days=31*12*15)
-			range = RetreiveFromDateInterval(access_token, user.user_id, startDate, endDate)	
-			
-			#store the date range in db
-			user = User.objects.get(user_id=int(user.user_id))
-			logger.debug("-> result : activity from " + str(range[0]) + " to " + str(range[1]) + ". Number " + str(range[2]))
-			
-			if range[0]:
-				user.first_activity_date = make_aware(range[0], timezone=timezone.utc)
-			else:
-				user.first_activity_date = None
-			if range[1]:
-				user.last_activity_date = make_aware(range[1], timezone=timezone.utc)
-			else:
-				user.last_activity_date = None
-			
-			user.act_number = range[2] if range[2] else 0
-			user.save()
-			
-			name = user.firstname + " " + user.lastname + " <i class=\"fa fa-caret-down\"></i>"
-			request.session['name'] = name	
-			#html = athlete	
 
+			try:
+				range = RetreiveFromDateInterval(access_token, user.user_id, startDate, endDate)
+			except:
+				range = None
+				request.session['ACCESS_TOKEN'] = None
+			
+			if range:
+				#store the date range in db
+				user = User.objects.get(user_id=int(user.user_id))
+				logger.debug("-> result : activity from " + str(range[0]) + " to " + str(range[1]) + ". Number " + str(range[2]))
+				
+				if range[0]:
+					user.first_activity_date = make_aware(range[0], timezone=timezone.utc)
+				else:
+					user.first_activity_date = None
+				if range[1]:
+					user.last_activity_date = make_aware(range[1], timezone=timezone.utc)
+				else:
+					user.last_activity_date = None
+				
+				user.act_number = range[2] if range[2] else 0
+				user.save()
+				
+				name = user.firstname + " " + user.lastname + " <i class=\"fa fa-caret-down\"></i>"
+				request.session['name'] = name	
+				#html = athlete	
+		else:
+			logger.debug("Error, user_id")
 
 	else:
+		logger.debug("Error, no ACCESS_TOKEN")
 		isLogged =  False
+		
 	return render(request, 'baseStrava.html', locals() )
 	
 def generateGraph(id, list, objList):

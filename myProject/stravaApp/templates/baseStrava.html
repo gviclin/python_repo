@@ -12,7 +12,9 @@
         <!--link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"-->
         <!--link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"-->		
 		<!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"-->
+		 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
 		<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 		<link rel="stylesheet" href="{% static 'css/strava.css' %}">
@@ -46,7 +48,31 @@
 	</div>			
 	</section>
 	
-	<!section>
+	<div align="center">
+		<div style="padding:10px; border:1px solid #e7e7e7;width:270px;
+			background-color:#ffffff;" align="left">
+			<div style="margin-bottom:10px;margin-top:15px; text-align:center;font-size:22px; font-weight:100; color:#333333;">Strava sync</div>
+			<div style="padding-bottom:20px; border-bottom:1px solid #e7e7e7;">
+			</div>
+
+			<div style="margin-bottom:10px;margin-top:15px;">Profile : </div>
+			<div style="padding-bottom:20px; border-bottom:1px solid #e7e7e7;">
+				<div class="progressbarclass" id = "progressbar-1"></div>
+				<div style="display:inline-block;"><span class="pourcent" id="p1" pourcent="70">1</span>
+					<span id="fp1" style="color:#cb2025;">%</span>
+				</div>
+			</div>
+			<div style="margin-bottom:10px;margin-top:15px;">Activities : </div>
+			<div style="padding-bottom:20px; border-bottom:1px solid #e7e7e7;">
+				<div class="progressbarclass" id = "progressbar-2"></div>
+				<div style="display:inline-block;"><span class="pourcent" id="p2" pourcent="100">1</span>
+					<span id="fp2" style="color:#cb2025;">%</span>
+				</div>
+			</div>	
+		</div>
+	</div>
+	
+	<section>
 		<div class="log">
 		<p id="testgv">{{html}}</p>
 		</div>
@@ -65,10 +91,33 @@
 
 <script type='text/javascript'>
 
-
-
  $(document).ready(function(){
  
+	var progressbar = $( "#progressbar-1" );
+	$( "#progressbar-1" ).progressbar({
+		value: 30,
+		max:100
+	});
+	$( "#p1" ).html(30);
+	
+	function progress() {
+		var val = progressbar.progressbar( "value" ) || 0;
+		console.log("progressbar value : " + val)
+		progressbar.progressbar( "value", val + 1 );
+		$( "#p1" ).html(val + 1);
+		if ( val < 99 ) {
+			setTimeout( progress, 20 );
+		}
+	}
+	setTimeout( progress, 1000 );
+
+
+	$( "#progressbar-2" ).progressbar({
+	value: 60
+	});
+	$( "#p2" ).html(60);
+
+
 	// Store the page type
 {% if actif == 1 %}sessionStorage.setItem("pageType", "month");{% endif %}
 {% if actif == 2 %}sessionStorage.setItem("pageType", "year");{% endif %}
@@ -78,7 +127,7 @@ sessionStorage.setItem("isLogged", "1");
 {% else %}
 sessionStorage.setItem("isLogged", "0");
 {% endif %}	
-	
+
 	updateMenu();
 	
 	$("#run").prop("checked", true);

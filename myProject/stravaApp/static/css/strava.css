@@ -1,4 +1,23 @@
+.ui-widget-header {
+	background: #cedc98;
+	border: 1px solid #DDDDDD;
+	color: #333333;
+	font-weight: bold;
+}
 
+.progressbarclass {
+	width:200px; 
+	height:15px;
+	background-color:#f7f7f7;
+	display:inline-block;
+}
+
+.pourcent{
+	color:#cb2025;
+	font-weight:500;
+	font-size:20px;
+	margin-left:10px;
+}
 
 li:nth-child(odd) { 
 	background: #1c87c9; 

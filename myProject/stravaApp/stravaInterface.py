@@ -48,7 +48,7 @@ def getAthlete(access_token):
 		
 
 	athlete = access.get_logged_in_athlete()
-	
+
 	if athlete is not None:	
 		athlete.store_locally()
 		athlete = athlete.to_dict()
@@ -61,15 +61,59 @@ def getAthlete(access_token):
 	return athlete
 	
 
-def RetreiveFromDateInterval(access_token, athlete_id, startdate, startbefore):
+def RetreiveFromDateInterval(access_token, athlete_id, startdate, enddate):
 	"""RetreiveFromDateInterval
 
 	Returns
 	-------
 	list including the dates of the first and the last activity and the number of activity
 	"""
+	
+	logger.debug("RetreiveFromDateInterval from <" + str(startdate) + "> to <" + str(enddate) + ">")
+
+	access = stravaio.StravaIO(access_token=access_token)
+	
+	# Get list of athletes activities since a given date (after) given in a human friendly format.
+	# Kudos to [Maya: Datetimes for Humans(TM)](https://github.com/kennethreitz/maya)
+	# Returns a list of [Strava SummaryActivity](https://developers.strava.com/docs/reference/#api-models-SummaryActivity) objects
+	list_activities = access.get_logged_in_athlete_activities(after=startdate,before=enddate, page=0,per_page =100 )
+
+	'''strava_dir = stravaio.dir_stravadata()
+	
+	activities_dir = os.path.join(strava_dir, f"summary_activities_{athlete_id}")
+	if not os.path.exists(activities_dir):
+		os.mkdir(activities_dir)
+
+	streams = []
+
+	# Remove all files from dir "summary_activities_{athlete_id}"
+	files = glob.glob(activities_dir + '/*')
+	for f in files:
+		os.remove(f)
+	 
+	# Obvious use - store all activities locally
+	#for a in list_activities:		
+		#store stream if not exist yet
+		if not self.isStreamStored(a.id):
+			streams = self.client.get_activity_streams(a.id, self.athlete.id, False) #local = False to retreive data from Strava
+			streams.store_locally()
+			streams = pd.DataFrame(streams.to_dict())
+		else:
+			dir_streams = os.path.join(dir_stravadata(), f"streams_{self.athlete.id}")
+			f_name = f"streams_{a.id,}.parquet"
+			f_path = os.path.join(dir_streams, f_name)
+			if f_path in glob.glob(f_path):
+				streams = pd.read_parquet(f_path)
+		
+		print("stream id : ",a.id)'''
+				
+
+	startdate = startdate.replace(tzinfo=None)
+	enddate = enddate.replace(tzinfo=None)
+	
+	
 	stat = Statist(logger)
-	return stat.RetreiveFromDateInterval(access_token, athlete_id, startdate, startbefore)
+	return stat.RetreiveFromDateInterval(list_activities, athlete_id, startdate, enddate)
 
 
 def isStreamStored(activity_id):
