@@ -78,8 +78,8 @@ class StravaIO():
 		"""
 		return Activity(self.activities_api.get_activity_by_id(id, include_all_efforts=include_all_efforts))
 		
-	def get_one_page_activities(self, after=0, before=0, page=0,per_page=30, list_activities=None):
-			"""List all activities after a given date
+	def get_one_page_activities(self, after=0, before=0, page=0,per_page=100, list_activities=None):
+		"""List all activities after a given date
 		
 		Parameters
 		----------
@@ -95,6 +95,16 @@ class StravaIO():
 		"""
 		if list_activities is None:
 			list_activities = []
+			
+		if page==0:
+			page=1
+			
+		fetched = self.activities_api.get_logged_in_athlete_activities(after=after, before=before, page=page,per_page=per_page)
+		nbElt = len(_fetched)
+		list_activities.extend(_fetched)
+		logger.debug("Page " + str(page) + " Fetched " + str(len(_fetched)))
+		
+		return list_activities
 
 	def get_logged_in_athlete_activities(self, after=0, before=0, page=0,per_page=100, list_activities=None):
 		"""List all activities after a given date
@@ -116,8 +126,7 @@ class StravaIO():
 		after = date_to_epoch(after)
 		before = date_to_epoch(before)
 		
-		if page=0:
-			page=1
+		page=1
 			
 		
 		_fetched = self.activities_api.get_logged_in_athlete_activities(after=after, before=before, page=page,per_page=per_page)

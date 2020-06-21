@@ -72,6 +72,8 @@
 		</div>
 	</div>
 	
+	<p id="ss">{{html}}</p>
+	
 	<section>
 		<div class="log">
 		<p id="testgv">{{html}}</p>
@@ -91,25 +93,19 @@
 
 <script type='text/javascript'>
 
- $(document).ready(function(){
- 
-	var progressbar = $( "#progressbar-1" );
+ $(document).ready(function() {
+	var source;	
+
+	//setTimeout( closeEvent, 5000 ); 
+	
 	$( "#progressbar-1" ).progressbar({
-		value: 30,
+		value: 0,
 		max:100
 	});
-	$( "#p1" ).html(30);
+	$( "#p1" ).html(0);
 	
-	function progress() {
-		var val = progressbar.progressbar( "value" ) || 0;
-		console.log("progressbar value : " + val)
-		progressbar.progressbar( "value", val + 1 );
-		$( "#p1" ).html(val + 1);
-		if ( val < 99 ) {
-			setTimeout( progress, 20 );
-		}
-	}
-	setTimeout( progress, 1000 );
+
+	//setTimeout( progress, 1000 );
 
 
 	$( "#progressbar-2" ).progressbar({
@@ -187,7 +183,7 @@ sessionStorage.setItem("isLogged", "0");
 
  });
  
- function GetActivityType() {
+function GetActivityType() {
 	type=[];
 	if ($('#run').is(":checked")) {
 		type.push("run")
@@ -198,7 +194,7 @@ sessionStorage.setItem("isLogged", "0");
 	return type
 }
 
- function isLogged() {
+function isLogged() {
 	if (sessionStorage.getItem("isLogged") == 1) 
 		return true;	
 	else
@@ -207,7 +203,7 @@ sessionStorage.setItem("isLogged", "0");
 
 
  
- function sendPostMessage(activityType, pageType) {
+function sendPostMessage(activityType, pageType) {
 	// make POST ajax call
 	$('html, body').css("cursor", "wait");
 	$.ajax({
@@ -236,7 +232,7 @@ sessionStorage.setItem("isLogged", "0");
 }
 
 
- function updateMenu() {
+function updateMenu() {
 	if (sessionStorage.getItem("pageType") == "month")
 	{
 		$('#monthLink').css('background-color', '#858585');
@@ -261,6 +257,7 @@ sessionStorage.setItem("isLogged", "0");
 
 	if (isLogged())
 	{
+		console.log("====> Logged ")
 		//$('#loginLink').html("Gael Viclin " +  "<i class=\"fa fa-caret-down\"></i>");
 		$('.dropdown').hover(
 			  function() {
@@ -271,9 +268,13 @@ sessionStorage.setItem("isLogged", "0");
 		);
 		//deactivate login button
 		$('.dropbtn').css( 'cursor', 'default');
+		
+		startEventListening();
 	}
 	else
 	{
+		
+		console.log("====> Not logged ")
 		$('#loginLink').html("Login ");
 		$('.dropdown').hover(
 			  function() {
@@ -287,4 +288,48 @@ sessionStorage.setItem("isLogged", "0");
 		$('.typeClass').hide();	
 	}
 }
+
+function startEventListening() {	
+	if(typeof(EventSource) !== "undefined") {
+		source = new EventSource("{% url 'stream' %}");
+		
+		source.onmessage = function(event) {
+			document.getElementById("ss").innerHTML = event.data + "<br>";
+			progress();
+			
+		};
+		
+		source.onopen = function(event) {
+			console.log("onopen : Server side event connected to server !")
+		};
+		
+		source.onerror = function(event) {
+			console.log("onerror : Server side event connected to server !")
+		};
+	} else {
+		document.getElementById("ss").innerHTML = "Sorry, your browser does not support server-sent events...";
+	}
+}
+
+	
+function closeEvent() {
+	console.log("closeEvent : Server side event disconnected from server !")
+	source.close();
+
+}
+
+function progress() {
+	var progressbar = $( "#progressbar-1" );
+	var val = progressbar.progressbar( "value" ) || 0;
+	if (val <= 90) {
+		//console.log("progressbar value : " + val)
+		progressbar.progressbar( "value", val + 10 );
+		$( "#p1" ).html(val + 10);
+		/*if ( val < 99 ) {
+			setTimeout( progress, 20 );
+		}*/
+	}
+}
+	
+	
  </script>

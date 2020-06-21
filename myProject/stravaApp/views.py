@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect,JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect,JsonResponse, StreamingHttpResponse
 from django.conf import settings
 from .models import User
 from .forms import PostSettings
@@ -30,8 +30,18 @@ from stravaApp.stravaInterface import *
 from django.views.decorators.csrf import csrf_exempt
 
 
+def stream(request):
+	logger.debug("======> stream. URL <" + request.path + ">")
+	def event_stream():
+		while True:
+			time.sleep(1)
+			yield 'data: The server time is: %s\n\n' % datetime.datetime.now()
+	return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+
+
 @csrf_exempt
 def sync_ajax(request):
+	logger.debug("======> sync_ajax. URL <" + request.path + ">")
 	activityType = "No value"
 	statType = "No value"
 	response = {"log":""}
@@ -55,6 +65,7 @@ def viewSettingPost(request):
 	actif = 3	# login active
 	isLogged = True #logged because clic on setting bouton
 	name = request.session.get('name', 'no_name') 
+	user = None
 	if os.environ.get('DEV'):
 		dev = True
 	else:
