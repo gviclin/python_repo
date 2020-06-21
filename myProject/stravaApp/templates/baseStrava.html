@@ -99,19 +99,20 @@
 	var progressbar = $( "#progressbar-1" );
 	$( "#progressbar-1" ).progressbar({
 		value: 30,
-		max:300
+		max:100
 	});
 	$( "#p1" ).html(30);
+	
 	function progress() {
-		//console.log("toto")
 		var val = progressbar.progressbar( "value" ) || 0;
+		console.log("progressbar value : " + val)
 		progressbar.progressbar( "value", val + 1 );
-			$( "#p1" ).html(val + 1);
+		$( "#p1" ).html(val + 1);
 		if ( val < 99 ) {
-			setTimeout( progress, 100 );
+			setTimeout( progress, 20 );
 		}
 	}
-	setTimeout( progress, 3000 );
+	setTimeout( progress, 1000 );
 
 
 	$( "#progressbar-2" ).progressbar({

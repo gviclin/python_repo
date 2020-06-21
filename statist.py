@@ -31,54 +31,14 @@ class Statist():
 		self.logger = logger
 		self.strava_dir = dir_stravadata()
 
-	def RetreiveFromDateInterval(self,access_token, athlete_id, startdate, enddate):
+	def RetreiveFromDateInterval(self,list_activities, athlete_id, startdate, enddate):
 		""" RetreiveFromDateInterval 
 
 		Returns
 		-------
 		list including the dates of the first and the last activity and the number of activity
 		"""
-		logger.debug("Compute the local db from <" + str(startdate) + "> to <" + str(enddate) + ">")
-		
-		access = stravaio.StravaIO(access_token=access_token)
-		
-		# Get list of athletes activities since a given date (after) given in a human friendly format.
-		# Kudos to [Maya: Datetimes for Humans(TM)](https://github.com/kennethreitz/maya)
-		# Returns a list of [Strava SummaryActivity](https://developers.strava.com/docs/reference/#api-models-SummaryActivity) objects
-		list_activities = access.get_logged_in_athlete_activities(after=startdate,before=enddate, page=0,per_page =100 )
-
-		'''strava_dir = stravaio.dir_stravadata()
-		
-		activities_dir = os.path.join(strava_dir, f"summary_activities_{athlete_id}")
-		if not os.path.exists(activities_dir):
-			os.mkdir(activities_dir)
-
-		streams = []
-
-		# Remove all files from dir "summary_activities_{athlete_id}"
-		files = glob.glob(activities_dir + '/*')
-		for f in files:
-			os.remove(f)
-		 
-		# Obvious use - store all activities locally
-		#for a in list_activities:		
-			#store stream if not exist yet
-			if not self.isStreamStored(a.id):
-				streams = self.client.get_activity_streams(a.id, self.athlete.id, False) #local = False to retreive data from Strava
-				streams.store_locally()
-				streams = pd.DataFrame(streams.to_dict())
-			else:
-				dir_streams = os.path.join(dir_stravadata(), f"streams_{self.athlete.id}")
-				f_name = f"streams_{a.id,}.parquet"
-				f_path = os.path.join(dir_streams, f_name)
-				if f_path in glob.glob(f_path):
-					streams = pd.read_parquet(f_path)
-			
-			print("stream id : ",a.id)'''
-					
-	
-		startdate = startdate.replace(tzinfo=None)
-		enddate = enddate.replace(tzinfo=None)
+		#logger.debug("RetreiveFromDateInterval from <" + str(startdate) + "> to <" + str(enddate) + ">")
 		#wait = input("PRESS ENTER TO CONTINUE.")
 		#quit()
 
@@ -158,11 +118,13 @@ class Statist():
 			#print(str(list_col))
 			newDf = newDf.reindex(columns=list_col)		
 			newDf.set_index("id")
+		'''else:
+			logger.debug("No new activities") '''
 			
 		f_parquet = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")		
 		
 		if not os.path.exists(f_parquet):
-			#logger.debug("Local bd empty (not parquet file)")
+			logger.debug("Local bd empty (not parquet file)")
 			existingDf = newDf
 			logger.debug("Local bd size changed from " + str(0) + " to " + str(len(existingDf)))
 		else:
@@ -189,6 +151,7 @@ class Statist():
 		#existingDf.tz_convert('UTC')
 		
 		#Store the dataframe		
+		logger.debug("2")
 		existingDf.to_parquet(f_parquet)
 		
 		#Store the dataframe in excell file
