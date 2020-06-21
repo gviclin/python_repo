@@ -30,6 +30,25 @@ from stravaApp.stravaInterface import *
 from django.views.decorators.csrf import csrf_exempt
 
 
+@csrf_exempt
+def sync_ajax(request):
+	activityType = "No value"
+	statType = "No value"
+	response = {"log":""}
+	html = ""
+	listType = []
+	
+	#check if logged
+	access_token = request.session.get('ACCESS_TOKEN', None) 
+	
+	if access_token and request.method == "POST":
+		
+		
+		response["log"] 
+
+	
+	return JsonResponse(response, status = 200)
+
 
 def viewSettingPost(request):
 	logger.debug("======> viewSettingPost. URL <" + request.path + ">")

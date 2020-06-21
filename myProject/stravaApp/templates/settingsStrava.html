@@ -1,7 +1,7 @@
 {% extends 'baseStrava.html' %}
 
 {% block content %}
-    <h1>New post</h1>
+    <h1>Settings</h1>
     <form method="POST" class="post-form">{% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="save btn btn-default">Save</button>
