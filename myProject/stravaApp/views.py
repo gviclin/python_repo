@@ -32,12 +32,106 @@ from django.views.decorators.csrf import csrf_exempt
 
 def stream(request):
 	logger.debug("======> stream. URL <" + request.path + ">")
-	def event_stream():
+	
+	def event_stream(request, progressValue):
+		response = {"log":"12"}
 		while True:
 			time.sleep(1)
-			yield 'data: The server time is: %s\n\n' % datetime.datetime.now()
-	return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+			result = startStravaSync(request)
+			if result is None:
+				yield 'data: startStravaSync return None'
 
+			else:
+				
+				logger.debug("result : " + result)
+				response["result"] = result
+				progressValue += 20
+				response["progressValue"] = progressValue
+				str1 = str(response).replace("'", '"') # dirty code  : javascript JSON supports supports " and not single quote '
+				yield 'data: ' + str1  +' \n\n'
+				#yield 'data: The server time is: %s\n\n' % datetime.datetime.now()
+					
+	return StreamingHttpResponse(event_stream(request, 20), content_type='text/event-stream')
+
+def startStravaSync(request):
+	result =""
+	if os.environ.get('DEV'):
+		dev = True
+	else:
+		dev = False
+	
+		#check if logged
+	access_token = request.session.get('ACCESS_TOKEN', None) 			
+	if  access_token is not None:
+		isLogged =  True
+		
+		# retreive user table
+		user_id = request.session.get('user_id', None) 
+		user = User()	
+		try:
+			user = User.objects.get(user_id=user_id)
+		except user.DoesNotExist:
+			user = None
+	
+		if user: 
+			#Retreive strava datas
+			#endDate = make_aware(datetime.datetime.utcnow() +  timedelta(hours=24),timezone=timezone.utc)
+			endDate = datetime.datetime.utcnow() +  timedelta(hours=24)
+			#logger.debug("endDate : " + endDate.tzname()) 			
+			
+			if user.last_activity_date is not None:		
+				#logger.debug("--> last_activity_date is not null")			
+				startDate = user.last_activity_date  +  timedelta(seconds=1)
+				#unset the timezone !!!
+				startDate = startDate.replace(tzinfo=None)
+			else:
+				#logger.debug("--> last_activity_date is null") #timezone=timezone.utc
+				startDate = datetime.datetime(2000, 1, 1, 0, 0 ,0)
+
+			
+			'''endDate = datetime.datetime.utcnow() +  timedelta(hours=24) 
+			startDate = endDate - timedelta(days=31)'''
+			
+			#startDate = endDate - timedelta(days=31*12*15)
+
+			try:
+				range = RetreiveFromDateInterval(access_token, user.user_id, startDate, endDate)
+			except:
+				range = None
+				request.session['ACCESS_TOKEN'] = None
+			
+			if range:
+				#store the date range in db
+				user = User.objects.get(user_id=int(user.user_id))
+				logger.debug("-> result : activity from " + str(range[0]) + " to " + str(range[1]) + ". Number " + str(range[2]))
+				
+				result = "Synchronisation from of <" + str(range[2]) + "> activities from <" +  str(range[0]) + "> to <" + str(range[1]) + ">"
+
+
+				
+				if range[0]:
+					user.first_activity_date = make_aware(range[0], timezone=timezone.utc)
+				else:
+					user.first_activity_date = None
+				if range[1]:
+					user.last_activity_date = make_aware(range[1], timezone=timezone.utc)
+				else:
+					user.last_activity_date = None
+				
+				user.act_number = range[2] if range[2] else 0
+				user.save()
+				
+
+		else:
+			logger.debug("Error, user_id")
+			return None
+
+	else:
+		logger.debug("Error, no ACCESS_TOKEN")
+		return None
+		
+	return result
+	
 
 @csrf_exempt
 def sync_ajax(request):
@@ -219,7 +313,7 @@ def viewLogin(request):
 			
 			logger.debug(f"New access_token <" + str(access_token) + ">")
 			
-			if access_token is not None or not access_token:			
+			if access_token is not None:			
 				#store the activity instance
 				request.session['ACCESS_TOKEN'] = access_token				
 
@@ -249,10 +343,11 @@ def viewLogin(request):
 				user = None
 			
 			if not user:
+				logger.debug(f"if not user:")
 				user = User()
 				user.user_id = athlete["id"]
 				
-			user.django_user = request.user
+			#user.django_user = request.user
 			user.firstname = athlete["firstname"]
 			user.lastname = athlete["lastname"]
 			user.weight = athlete["weight"]
@@ -275,8 +370,9 @@ def viewLogin(request):
 		
 		return index(request, actif = 1)
 	else:
-		html = "Login failed ! "
+		html = "Login failed !! "
 		request.session['ACCESS_TOKEN'] = None
+		logger.debug(f" Login failed !")
 
 	#logger.debug(f"session_key : "+ request.session.session_key)
 		
@@ -306,53 +402,10 @@ def index(request, actif = 1):
 		except user.DoesNotExist:
 			user = None
 	
-		if user: 
-			#Retreive strava datas
-			#endDate = make_aware(datetime.datetime.utcnow() +  timedelta(hours=24),timezone=timezone.utc)
-			endDate = datetime.datetime.utcnow() +  timedelta(hours=24)
-			#logger.debug("endDate : " + endDate.tzname()) 			
-			
-			if user.last_activity_date is not None:		
-				#logger.debug("--> last_activity_date is not null")			
-				startDate = user.last_activity_date  +  timedelta(seconds=1)
-				#unset the timezone !!!
-				startDate = startDate.replace(tzinfo=None)
-			else:
-				#logger.debug("--> last_activity_date is null") #timezone=timezone.utc
-				startDate = datetime.datetime(2000, 1, 1, 0, 0 ,0)
-
-			
-			'''endDate = datetime.datetime.utcnow() +  timedelta(hours=24) 
-			startDate = endDate - timedelta(days=31)'''
-			
-			#startDate = endDate - timedelta(days=31*12*15)
-
-			try:
-				range = RetreiveFromDateInterval(access_token, user.user_id, startDate, endDate)
-			except:
-				range = None
-				request.session['ACCESS_TOKEN'] = None
-			
-			if range:
-				#store the date range in db
-				user = User.objects.get(user_id=int(user.user_id))
-				logger.debug("-> result : activity from " + str(range[0]) + " to " + str(range[1]) + ". Number " + str(range[2]))
-				
-				if range[0]:
-					user.first_activity_date = make_aware(range[0], timezone=timezone.utc)
-				else:
-					user.first_activity_date = None
-				if range[1]:
-					user.last_activity_date = make_aware(range[1], timezone=timezone.utc)
-				else:
-					user.last_activity_date = None
-				
-				user.act_number = range[2] if range[2] else 0
-				user.save()
-				
-				name = user.firstname + " " + user.lastname + " <i class=\"fa fa-caret-down\"></i>"
-				request.session['name'] = name	
-				#html = athlete	
+		if user: 				
+			name = user.firstname + " " + user.lastname + " <i class=\"fa fa-caret-down\"></i>"
+			request.session['name'] = name	
+			#html = athlete	
 		else:
 			logger.debug("Error, user_id")
 
@@ -362,6 +415,7 @@ def index(request, actif = 1):
 		
 	return render(request, 'baseStrava.html', locals() )
 	
+
 def generateGraph(id, list, objList):
 	html = ""
 	

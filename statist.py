@@ -151,7 +151,6 @@ class Statist():
 		#existingDf.tz_convert('UTC')
 		
 		#Store the dataframe		
-		logger.debug("2")
 		existingDf.to_parquet(f_parquet)
 		
 		#Store the dataframe in excell file

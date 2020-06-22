@@ -17,6 +17,7 @@ python3 manage.py collectstatic
 python3 manage.py runserver
 
 #nginx
+/etc/nginx
 sudo ufw app list 
 sudo ufw allow 'Nginx HTTP'
 sudo systemctl restart nginx

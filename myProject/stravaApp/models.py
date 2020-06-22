@@ -4,7 +4,7 @@ from django.utils import timezone
 
 class User(models.Model):
 	# Fields
-	django_user = models.ForeignKey('auth.User',on_delete=models.CASCADE)
+	#django_user = models.ForeignKey('auth.User',on_delete=models.CASCADE)
 	user_id = models.IntegerField(primary_key=True)
 	firstname = models.CharField(max_length=50)
 	lastname = models.CharField(max_length=50)
