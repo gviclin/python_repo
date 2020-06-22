@@ -156,6 +156,10 @@ sessionStorage.setItem("isLogged", "1");
 sessionStorage.setItem("isLogged", "0");
 {% endif %}	
 
+	if (isLogged() && sessionStorage.getItem("pageType") != "login")	{
+		syncStrava();
+	}
+	
 	updateMenu();
 	
 	$("#run").prop("checked", true);
@@ -301,7 +305,7 @@ function updateMenu() {
 		//deactivate login button
 		$('.dropbtn').css( 'cursor', 'default');
 		
-		syncStrava();
+
 	}
 	else
 	{
@@ -387,11 +391,9 @@ function progress(progressValue) {
 }
 
 function syncStrava() {
-	modal.style.display = "block";
+	modal.style.display = "block";		  
 		  
-		  
-	startEventListening();
-		  
+	startEventListening();		  
 }
 
 	

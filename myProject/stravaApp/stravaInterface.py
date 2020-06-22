@@ -97,6 +97,7 @@ def RetreiveFromDateInterval(access_token, athlete_id, startdate, enddate):
 	# Returns a list of [Strava SummaryActivity](https://developers.strava.com/docs/reference/#api-models-SummaryActivity) objects
 	list_activities = access.get_logged_in_athlete_activities(after=startdate,before=enddate, page=0,per_page =100 )
 
+		
 	'''strava_dir = stravaio.dir_stravadata()
 	
 	activities_dir = os.path.join(strava_dir, f"summary_activities_{athlete_id}")

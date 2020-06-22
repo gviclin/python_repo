@@ -34,16 +34,19 @@ def stream(request):
 	logger.debug("======> stream. URL <" + request.path + ">")
 	
 	def event_stream(request, progressValue):
-		response = {"log":"12"}
+		response = {}
 		while True:
 			time.sleep(1)
 			result = startStravaSync(request)
 			if result is None:
-				yield 'data: startStravaSync return None'
-
+				response["result"] = "data: startStravaSync return None"
+				response["progressValue"] = 100
+				str1 = str(response).replace("'", '"') # dirty code  : javascript JSON supports supports " and not single quote '
+				yield 'data: ' + str1  +' \n\n'
+			
 			else:
 				
-				logger.debug("result : " + result)
+				logger.debug("result : <" + result + ">")
 				response["result"] = result
 				progressValue += 20
 				response["progressValue"] = progressValue
@@ -51,10 +54,10 @@ def stream(request):
 				yield 'data: ' + str1  +' \n\n'
 				#yield 'data: The server time is: %s\n\n' % datetime.datetime.now()
 					
-	return StreamingHttpResponse(event_stream(request, 20), content_type='text/event-stream')
+	return StreamingHttpResponse(event_stream(request, 0), content_type='text/event-stream')
 
 def startStravaSync(request):
-	result =""
+	result =None
 	if os.environ.get('DEV'):
 		dev = True
 	else:
@@ -63,6 +66,7 @@ def startStravaSync(request):
 		#check if logged
 	access_token = request.session.get('ACCESS_TOKEN', None) 			
 	if  access_token is not None:
+		logger.debug(f"access_token retreives from session <" + str(access_token) + ">")
 		isLogged =  True
 		
 		# retreive user table
@@ -96,7 +100,8 @@ def startStravaSync(request):
 
 			try:
 				range = RetreiveFromDateInterval(access_token, user.user_id, startDate, endDate)
-			except:
+			except Exception as e:
+				logger.debug("Exception  : "+ str(e))
 				range = None
 				request.session['ACCESS_TOKEN'] = None
 			
@@ -124,11 +129,9 @@ def startStravaSync(request):
 
 		else:
 			logger.debug("Error, user_id")
-			return None
 
 	else:
 		logger.debug("Error, no ACCESS_TOKEN")
-		return None
 		
 	return result
 	

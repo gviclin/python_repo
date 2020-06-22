@@ -128,7 +128,6 @@ class StravaIO():
 		
 		page=1
 			
-		
 		_fetched = self.activities_api.get_logged_in_athlete_activities(after=after, before=before, page=page,per_page=per_page)
 		nbElt = len(_fetched)
 		list_activities.extend(_fetched)
