@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect,JsonResponse, StreamingHttpResponse
+from django.http import HttpResponse, HttpResponseRedirect,JsonResponse, StreamingHttpResponse, Http404
 from django.conf import settings
 from .models import User
 from .forms import PostSettings
@@ -30,44 +30,86 @@ from stravaApp.stravaInterface import *
 from django.views.decorators.csrf import csrf_exempt
 
 
-def stream(request):
-	logger.debug("======> stream. URL <" + request.path + ">")
+# Generator for send sync progress infos to the client
+def event_stream(access_token, user_id, user, request, startDate, endDate):
+	response = {}
+	list_activities= []
+	page=1	
+	progressValueActivities = 0
+	progressValueCompute = 0
 	
-	def event_stream(request, progressValue, page):
-		response = {}
-		list_activities= []
-		while True:
-			time.sleep(1)
-			result = StravaSync(request, page, list_activities)
-			if result is None:
-				response["result"] = "data: startStravaSync return None"
-				response["progressValue"] = 100
-				str1 = str(response).replace("'", '"') # dirty code  : javascript JSON supports supports " and not single quote '
-				yield 'data: ' + str1  +' \n\n'
-			
-			else:
-				logger.debug("StravaSync result : page <" + str(page) +">")
-				response["result"] = "result"
+	while True:
+		if progressValueCompute==100:
+			break
 				
-				if page==0:
-					progressValue += 100
-				else:
-					progressValue += 20
-				response["progressValue"] = progressValue
-				str1 = str(response).replace("'", '"') # dirty code  : javascript JSON supports supports " and not single quote '
-				yield 'data: ' + str1  +' \n\n'
-				#yield 'data: The server time is: %s\n\n' % datetime.datetime.now()
-					
-	return StreamingHttpResponse(event_stream(request, 0, 1), content_type='text/event-stream')
+		if progressValueCompute==10:
+			range = ComputeDatas(list_activities, user_id, startDate, endDate)		
+			
+			# Retreive from Strava Site finished. Update session			
+			if range:
+				#store the date range in db
+				user = User.objects.get(user_id=int(user.user_id))
+				logger.debug("-> result : activity from " + str(range[0]) + " to " + str(range[1]) + ". Number " + str(range[2]))
+				
+				result = "Synchronisation from of <" + str(range[2]) + "> activities from <" +  str(range[0]) + "> to <" + str(range[1]) + ">"
 
-def StravaSync(request, page, list_activities):
-	result = True
-	if os.environ.get('DEV'):
-		dev = True
-	else:
-		dev = False
+				
+				if range[0]:
+					user.first_activity_date = make_aware(range[0], timezone=timezone.utc)
+				else:
+					user.first_activity_date = None
+				if range[1]:
+					user.last_activity_date = make_aware(range[1], timezone=timezone.utc)
+				else:
+					user.last_activity_date = None
+				
+				user.act_number = range[2] if range[2] else 0
+				user.save()
+				progressValueCompute = 100
+		else:
+
+			
+			nbRetreived=0
+			try:
+				nbRetreived = get_one_page_activities(access_token, user_id, startDate, endDate, page, 100, list_activities)
+			
+				#range = RetreiveFromDateInterval(access_token, user.user_id, startDate, endDate)
+			except Exception as e:
+				logger.debug("Exception  : "+ str(e))
+				range = None
+				request.session['ACCESS_TOKEN'] = None
+				
+				
+			if nbRetreived==0:
+				#no more datas
+				page = 0
+				progressValueActivities = 100				
+				progressValueCompute = 10				
+				
+			else:
+				progressValueActivities = page * 10
+				if progressValueActivities > 100:
+					progressValueActivities = 100
+				page+= 1
+			
+
+		logger.debug("StravaSync progressValueActivities <" + str(progressValueActivities) +">. progressValueCompute <" + str(progressValueCompute) + ">")
+		response["result"] = "result"
+
+			
+		response["progressValueActivities"] = progressValueActivities
+		response["progressValueCompute"] = progressValueCompute
+		str1 = str(response).replace("'", '"') # dirty code  : javascript JSON supports supports " and not single quote '
+		yield 'data: ' + str1  +' \n\n'
+		#yield 'data: The server time is: %s\n\n' % datetime.datetime.now()
+
+		#time.sleep(0.1)
+
+
+def viewStravaSync(request):
+	logger.debug("======> viewStravaSync. URL <" + request.path + ">")
 	
-		#check if logged
+	#check if logged
 	access_token = request.session.get('ACCESS_TOKEN', None) 			
 	if  access_token is not None:
 		#logger.debug(f"access_token retreives from session <" + str(access_token) + ">")
@@ -95,59 +137,10 @@ def StravaSync(request, page, list_activities):
 			else:
 				#logger.debug("--> last_activity_date is null") #timezone=timezone.utc
 				startDate = datetime.datetime(2000, 1, 1, 0, 0 ,0)
-
-			
-			'''endDate = datetime.datetime.utcnow() +  timedelta(hours=24) 
-			startDate = endDate - timedelta(days=31)'''
-			
-			#startDate = endDate - timedelta(days=31*12*15)
-			nbRetreived=0
-			try:
-				nbRetreived = get_one_page_activities(access_token, user.user_id, startDate, endDate, page, 100, list_activities)
-			
-				#range = RetreiveFromDateInterval(access_token, user.user_id, startDate, endDate)
-			except Exception as e:
-				logger.debug("Exception  : "+ str(e))
-				range = None
-				request.session['ACCESS_TOKEN'] = None
-				
-				
-			if nbRetreived==0:
-				#no more datas
-				page[0] = 0
-			else:
-				page[0]+= 1
-			'''
-			if range:
-				#store the date range in db
-				user = User.objects.get(user_id=int(user.user_id))
-				logger.debug("-> result : activity from " + str(range[0]) + " to " + str(range[1]) + ". Number " + str(range[2]))
-				
-				result = "Synchronisation from of <" + str(range[2]) + "> activities from <" +  str(range[0]) + "> to <" + str(range[1]) + ">"
+						
+	return StreamingHttpResponse(event_stream(access_token, user_id, user, request, startDate, endDate), content_type='text/event-stream')
 
 
-				
-				if range[0]:
-					user.first_activity_date = make_aware(range[0], timezone=timezone.utc)
-				else:
-					user.first_activity_date = None
-				if range[1]:
-					user.last_activity_date = make_aware(range[1], timezone=timezone.utc)
-				else:
-					user.last_activity_date = None
-				
-				user.act_number = range[2] if range[2] else 0
-				user.save()
-				'''
-
-		else:
-			logger.debug("Error, user_id")
-
-	else:
-		logger.debug("Error, no ACCESS_TOKEN")
-		
-	return result
-	
 
 @csrf_exempt
 def sync_ajax(request):
@@ -161,11 +154,8 @@ def sync_ajax(request):
 	#check if logged
 	access_token = request.session.get('ACCESS_TOKEN', None) 
 	
-	if access_token and request.method == "POST":
-		
-		
+	if access_token and request.method == "POST":		
 		response["log"] 
-
 	
 	return JsonResponse(response, status = 200)
 
@@ -206,6 +196,8 @@ def viewSettingPost(request):
 		
 		else:
 			form = PostSettings(instance=user)
+	else:
+		raise Http404("User does not exist")
 			
 	return render(request, 'settingsStrava.html', {'form': form, 'actif': actif, 'isLogged': isLogged, 'name': name})
 
@@ -274,6 +266,11 @@ def post_ajax(request):
 		elif statType=="setting":
 			html = "Settings"
 			
+							
+		elif statType=="refresh":			
+			cleanDb(user_id)
+			html = "Refreh all"
+			
 		elif statType=="logout":
 			#logoff
 			
@@ -289,9 +286,10 @@ def post_ajax(request):
 			
 		response["data"] = html
 	
-	#else:
+	else:
 		# not logged
-		#response["log"]  = "Not logged"
+		response["log"]  = "Not logged"
+		return JsonResponse(response, status = 500)
 
 
 	return JsonResponse(response, status = 200)

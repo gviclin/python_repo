@@ -30,7 +30,8 @@
 		<button class="dropbtn" id="loginLink">{% autoescape off %}{{name}}{% endautoescape %}
 		</button>
 		<div class="dropdown-content">
-		  	<a href="{% url 'viewSettingPost' %}"id="settingLink">Setting</a>
+		  <a href="{% url 'viewSettingPost' %}"id="settingLink">Setting</a>
+		  <a id="refreshLink">Refresh all</a>
 		  <a id="logoutLink">Logout</a>
 		</div>
 	  </div> 
@@ -62,14 +63,14 @@
 					<div style="padding-bottom:20px; border-bottom:1px solid #e7e7e7;">
 					</div>
 
-					<div style="margin-bottom:10px;margin-top:15px;">Profile : </div>
+					<div style="margin-bottom:10px;margin-top:15px;">Activities</div>
 					<div style="padding-bottom:20px; border-bottom:1px solid #e7e7e7;">
 						<div class="progressbarclass" id = "progressbar-1"></div>
 						<div style="display:inline-block;"><span class="pourcent" id="p1" pourcent="70">1</span>
 							<span id="fp1" style="color:#cb2025;">%</span>
 						</div>
 					</div>
-					<div style="margin-bottom:10px;margin-top:15px;">Activities : </div>
+					<div style="margin-bottom:10px;margin-top:15px;">Internal calculation</div>
 					<div style="padding-bottom:20px; border-bottom:1px solid #e7e7e7;">
 						<div class="progressbarclass" id = "progressbar-2"></div>
 						<div style="display:inline-block;"><span class="pourcent" id="p2" pourcent="100">1</span>
@@ -141,9 +142,9 @@
 
 
 	$( "#progressbar-2" ).progressbar({
-	value: 60
+	value: 0
 	});
-	$( "#p2" ).html(60);
+	$( "#p2" ).html(0);
 
 
 	// Store the page type
@@ -192,6 +193,10 @@ sessionStorage.setItem("isLogged", "0");
 			window.location.href = "http://www.strava.com/oauth/authorize?client_id=9402&response_type=code&redirect_uri=http://mypersonalstat.ddns.net/login/&approval_prompt=auto&scope=read_all,profile:read_all,activity:read_all";
 			{% endif %}	
 		}
+		else
+		{
+			console.log("already logged !!!!");
+		}
 	});
 	
 	$("#settingLink").click(function(){		
@@ -200,10 +205,15 @@ sessionStorage.setItem("isLogged", "0");
 		updateMenu();*/
 	});
 	
+	$("#refreshLink").click(function(){		
+		//sessionStorage.setItem("pageType", "setting");
+		sendPostMessage(GetActivityType(), "refresh");	
+		//updateMenu();*/
+	});
+	
 	$("#logoutLink").click(function(){
 		sessionStorage.setItem("pageType", "logout");
 		sendPostMessage(GetActivityType(), "logout");	
-		sessionStorage.setItem("isLogged", "0");
 		updateMenu();
 	});
  
@@ -246,10 +256,18 @@ function sendPostMessage(activityType, pageType) {
 		type: 'POST',
 		url: "{% url 'post_ajax' %}",
 		data: "activityType=" + activityType + ";pageType=" + pageType,
+		
+		error: function (request, status, error) {
+			console.log(" ajax ko : " + request.responseText);
+			sessionStorage.setItem("isLogged", "0");
+			updateMenu();
+		},
+		
 		success: function (response) {
 			//alert("ajax ok");	
 			log1 = response["log"]
 			data = response["data"]
+			console.log(" ajax ok : " + log1)
 	
 			$("#testgv").text(function(i, origText){
 			return log1; 
@@ -328,14 +346,16 @@ function updateMenu() {
 function startEventListening() {	
 	if(typeof(EventSource) !== "undefined") {
 		console.log("startEventListening")
-		source = new EventSource("{% url 'stream' %}");
+		source = new EventSource("{% url 'viewStravaSync' %}");
 		
 		source.onmessage = function(event) {
 			var dict = JSON.parse(event.data)
 			result = dict["result"]
-			progressValue = dict["progressValue"]
-			console.log('event.data : ' + result);
-			progress(progressValue);
+			progressValueActivities = dict["progressValueActivities"]
+			progressValueCompute = dict["progressValueCompute"]
+
+			console.log('event.result : ' + result);
+			progress(progressValueActivities, progressValueCompute);
 			
 		};
 		
@@ -361,20 +381,29 @@ function closeEvent() {
 
 }
 
-function progress(progressValue) {
-	var progressbar = $( "#progressbar-1" );
+function progress(progressValueActivities, progressValueComput) {
+	var progressbar1 = $( "#progressbar-1" );
+	var progressbar2 = $( "#progressbar-2" );
 
-	console.log("progressbar value : " + progressValue)
-	progressbar.progressbar( "value", progressValue);
-	$( "#p1" ).html(progressValue);
-	if ( progressValue >= 100 ) {
-		progressbar.progressbar( "value", 100);
+	console.log("progressValueActivities value : " + progressValueActivities)
+	progressbar1.progressbar( "value", progressValueActivities);
+	$( "#p1" ).html(progressValueActivities);
+	if ( progressValueActivities >= 100 ) {
+		progressbar1.progressbar( "value", 100);
 		$( "#p1" ).html(100);
+	}
+	
+	console.log("progressValueComput value : " + progressValueComput)
+	progressbar2.progressbar( "value", progressValueComput);
+	$( "#p2" ).html(progressValueComput);
+	if ( progressValueComput >= 100 ) {
+		progressbar2.progressbar( "value", 100);
+		$( "#p2" ).html(100);
 		closeEvent();
 		function hide() {
 			modal.style.display = "none";
 		}
-		setTimeout( hide, 1100 ); 		
+		setTimeout( hide, 1800 ); 		
 	}
 }
 

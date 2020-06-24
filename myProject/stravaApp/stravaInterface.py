@@ -37,6 +37,11 @@ def login(user_token):
 def logoff(access_token):	
 	stravaio.deauthorize(access_token)
 	
+def cleanDb(athlete_id):
+	stat = Statist(logger)
+	return stat.cleanDb(athlete_id)	
+	
+	
 def getAthlete(access_token):
 	access = stravaio.StravaIO(access_token=access_token)
 	
@@ -75,7 +80,16 @@ def get_one_page_activities(access_token, athlete_id, startdate, enddate, page =
 	access = stravaio.StravaIO(access_token=access_token)
 	
 	# Get list of athletes activities since a given date (after) given in a human friendly format.
-	return access.get_one_page_activities(after=startdate,before=enddate, page=page,per_page=100, list_activities = list_activities)
+	return access.get_one_page_activities(after=startdate,before=enddate, page=page,per_page=per_page, list_activities = list_activities)
+	
+
+def ComputeDatas(list_activities, athlete_id, startdate, enddate):
+
+	startdate = startdate.replace(tzinfo=None)
+	enddate = enddate.replace(tzinfo=None)	
+	
+	stat = Statist(logger)
+	return stat.ComputeDatas(list_activities, athlete_id, startdate, enddate)
 
 
 def RetreiveFromDateInterval(access_token, athlete_id, startdate, enddate):
@@ -131,7 +145,7 @@ def RetreiveFromDateInterval(access_token, athlete_id, startdate, enddate):
 	
 	
 	stat = Statist(logger)
-	return stat.RetreiveFromDateInterval(list_activities, athlete_id, startdate, enddate)
+	return stat.ComputeDatas(list_activities, athlete_id, startdate, enddate)
 
 
 def isStreamStored(activity_id):

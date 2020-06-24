@@ -30,9 +30,18 @@ class Statist():
 		self.i = 5
 		self.logger = logger
 		self.strava_dir = dir_stravadata()
+		
+		
+	def cleanDb(self, athlete_id):
+		f_parquet = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")		
+		if not os.path.exists(f_parquet):
+			logger.debug("Local bd empty (not parquet file)")
+		else:
+			# Existing dataframe
+			os.remove(f_parquet)
 
-	def RetreiveFromDateInterval(self,list_activities, athlete_id, startdate, enddate):
-		""" RetreiveFromDateInterval 
+	def ComputeDatas(self,list_activities, athlete_id, startdate, enddate):
+		""" ComputeDatas 
 
 		Returns
 		-------
@@ -161,9 +170,20 @@ class Statist():
 		#logger.debug("---> 3")
 		#return the date range of the datas
 		
-		return [min(existingDf['start_date'] if not existingDf.empty else None),
+		ret = []
+		
+		try:
+			ret = [	min(existingDf['start_date']),
+					max(existingDf['start_date']),
+					len(existingDf)]
+				
+		except:
+			ret = [None, None, None]
+		
+		'''return [min(existingDf['start_date'] if not existingDf.empty anelse None),
 				max(existingDf['start_date']  if not existingDf.empty else None),
-				len(existingDf) if not existingDf.empty else None]
+				len(existingDf) if not existingDf.empty else None]'''
+		return ret
 				
 					
 	def Stat_dist_by_month(self,athlete_id, activityType):
@@ -173,12 +193,18 @@ class Statist():
 		-------
 		Make stat by month and activity type
 		"""
+		df_dist = pd.DataFrame()
+		
 		
 		# Read global data file
 		f_parquet = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")
+		
+		if not os.path.isfile(f_parquet):
+			return df_dist
+		
 		df = pd.read_parquet(f_parquet)
 		
-		df_dist = pd.DataFrame()
+		
 		if not df.empty:		
 			# Filter by type of activity
 			filter = df["type"].isin(activityType)
@@ -281,6 +307,10 @@ class Statist():
 		"""
 		# Read global data file
 		f_parquet = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")
+		
+		if not os.path.isfile(f_parquet):
+			return pd.DataFrame()
+		
 		df = pd.read_parquet(f_parquet)
 		
 		# Filter by type of activity

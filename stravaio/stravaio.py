@@ -96,9 +96,13 @@ class StravaIO():
 		if list_activities is None:
 			list_activities = []
 			
+		after = date_to_epoch(after)
+		before = date_to_epoch(before)
+			
 		if page==0:
 			page=1
 			
+		#logger.debug(" page : " + str(page) + " " + str(before) + str(after))
 		_fetched = self.activities_api.get_logged_in_athlete_activities(after=after, before=before, page=page,per_page=per_page)
 		nbElt = len(_fetched)
 		list_activities.extend(_fetched)
