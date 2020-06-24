@@ -99,12 +99,12 @@ class StravaIO():
 		if page==0:
 			page=1
 			
-		fetched = self.activities_api.get_logged_in_athlete_activities(after=after, before=before, page=page,per_page=per_page)
+		_fetched = self.activities_api.get_logged_in_athlete_activities(after=after, before=before, page=page,per_page=per_page)
 		nbElt = len(_fetched)
 		list_activities.extend(_fetched)
 		logger.debug("Page " + str(page) + " Fetched " + str(len(_fetched)))
 		
-		return list_activities
+		return nbElt
 
 	def get_logged_in_athlete_activities(self, after=0, before=0, page=0,per_page=100, list_activities=None):
 		"""List all activities after a given date

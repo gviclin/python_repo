@@ -75,10 +75,8 @@ def get_one_page_activities(access_token, athlete_id, startdate, enddate, page =
 	access = stravaio.StravaIO(access_token=access_token)
 	
 	# Get list of athletes activities since a given date (after) given in a human friendly format.
-	list_activities = access.get_one_page_activities(after=startdate,before=enddate, page=page,per_page=100, list_activities = list_activities)
+	return access.get_one_page_activities(after=startdate,before=enddate, page=page,per_page=100, list_activities = list_activities)
 
-	return list_activities
-	
 
 def RetreiveFromDateInterval(access_token, athlete_id, startdate, enddate):
 	"""RetreiveFromDateInterval

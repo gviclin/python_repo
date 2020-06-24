@@ -33,11 +33,12 @@ from django.views.decorators.csrf import csrf_exempt
 def stream(request):
 	logger.debug("======> stream. URL <" + request.path + ">")
 	
-	def event_stream(request, progressValue):
+	def event_stream(request, progressValue, page):
 		response = {}
+		list_activities= []
 		while True:
 			time.sleep(1)
-			result = startStravaSync(request)
+			result = StravaSync(request, page, list_activities)
 			if result is None:
 				response["result"] = "data: startStravaSync return None"
 				response["progressValue"] = 100
@@ -45,19 +46,22 @@ def stream(request):
 				yield 'data: ' + str1  +' \n\n'
 			
 			else:
+				logger.debug("StravaSync result : page <" + str(page) +">")
+				response["result"] = "result"
 				
-				logger.debug("result : <" + result + ">")
-				response["result"] = result
-				progressValue += 20
+				if page==0:
+					progressValue += 100
+				else:
+					progressValue += 20
 				response["progressValue"] = progressValue
 				str1 = str(response).replace("'", '"') # dirty code  : javascript JSON supports supports " and not single quote '
 				yield 'data: ' + str1  +' \n\n'
 				#yield 'data: The server time is: %s\n\n' % datetime.datetime.now()
 					
-	return StreamingHttpResponse(event_stream(request, 0), content_type='text/event-stream')
+	return StreamingHttpResponse(event_stream(request, 0, 1), content_type='text/event-stream')
 
-def startStravaSync(request):
-	result =None
+def StravaSync(request, page, list_activities):
+	result = True
 	if os.environ.get('DEV'):
 		dev = True
 	else:
@@ -66,7 +70,7 @@ def startStravaSync(request):
 		#check if logged
 	access_token = request.session.get('ACCESS_TOKEN', None) 			
 	if  access_token is not None:
-		logger.debug(f"access_token retreives from session <" + str(access_token) + ">")
+		#logger.debug(f"access_token retreives from session <" + str(access_token) + ">")
 		isLogged =  True
 		
 		# retreive user table
@@ -97,14 +101,23 @@ def startStravaSync(request):
 			startDate = endDate - timedelta(days=31)'''
 			
 			#startDate = endDate - timedelta(days=31*12*15)
-
+			nbRetreived=0
 			try:
-				range = RetreiveFromDateInterval(access_token, user.user_id, startDate, endDate)
+				nbRetreived = get_one_page_activities(access_token, user.user_id, startDate, endDate, page, 100, list_activities)
+			
+				#range = RetreiveFromDateInterval(access_token, user.user_id, startDate, endDate)
 			except Exception as e:
 				logger.debug("Exception  : "+ str(e))
 				range = None
 				request.session['ACCESS_TOKEN'] = None
-			
+				
+				
+			if nbRetreived==0:
+				#no more datas
+				page[0] = 0
+			else:
+				page[0]+= 1
+			'''
 			if range:
 				#store the date range in db
 				user = User.objects.get(user_id=int(user.user_id))
@@ -125,7 +138,7 @@ def startStravaSync(request):
 				
 				user.act_number = range[2] if range[2] else 0
 				user.save()
-				
+				'''
 
 		else:
 			logger.debug("Error, user_id")

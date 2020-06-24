@@ -363,17 +363,7 @@ function closeEvent() {
 
 function progress(progressValue) {
 	var progressbar = $( "#progressbar-1" );
-	/*var val = progressbar.progressbar( "value" ) || 0;
-	if (val <= 80) {
-		//console.log("progressbar value : " + val)
-		val += 20
-		progressbar.progressbar( "value", val);
-		$( "#p1" ).html(val);
-		if ( val == 100 ) {
-			//setTimeout( progress, 20 );
-			closeEvent()
-		}
-	}*/
+
 	console.log("progressbar value : " + progressValue)
 	progressbar.progressbar( "value", progressValue);
 	$( "#p1" ).html(progressValue);
@@ -384,16 +374,13 @@ function progress(progressValue) {
 		function hide() {
 			modal.style.display = "none";
 		}
-		setTimeout( hide, 2000 ); 
-
-		
+		setTimeout( hide, 1100 ); 		
 	}
 }
 
 function syncStrava() {
-	modal.style.display = "block";		  
-		  
-	startEventListening();		  
+	modal.style.display = "block";
+	startEventListening();
 }
 
 	
