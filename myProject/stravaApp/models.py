@@ -6,20 +6,21 @@ class User(models.Model):
 	# Fields
 	#django_user = models.ForeignKey('auth.User',on_delete=models.CASCADE)
 	user_id = models.IntegerField(primary_key=True)
-	firstname = models.CharField(max_length=50)
-	lastname = models.CharField(max_length=50)
+	firstname = models.CharField(max_length=50, null=True)
+	lastname = models.CharField(max_length=50, null=True)
+	access_token = models.CharField(max_length=50, null=True)
 	weight = models.FloatField(null=True)
-	sex = models.CharField(max_length=50)
-	country = models.CharField(max_length=50)
-	state = models.CharField(max_length=50)
-	city = models.CharField(max_length=50)
+	sex = models.CharField(max_length=50, null=True)
+	country = models.CharField(max_length=50, null=True)
+	state = models.CharField(max_length=50, null=True)
+	city = models.CharField(max_length=50, null=True)
 	follower_count = models.IntegerField(null=True)
 	friend_count = models.IntegerField(null=True)
-	measurement_preference = models.CharField(max_length=50)
+	measurement_preference = models.CharField(max_length=50, null=True)
 	ftp = models.IntegerField(null=True)
 	
 	updated_date = models.DateTimeField(
-		default=timezone.now)
+		default=timezone.now, null=True)
 			
 	strava_creation_date = models.DateTimeField(
 		blank=True, null=True)

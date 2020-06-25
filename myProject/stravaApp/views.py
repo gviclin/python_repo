@@ -11,7 +11,7 @@ from datetime import datetime, tzinfo
 import pytz
 
 from loguru import logger
-from django.utils.timezone import make_aware
+#from django.utils.timezone import make_aware
 
 import os
 import sys
@@ -31,7 +31,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 # Generator for send sync progress infos to the client
-def event_stream(access_token, user_id, user, request, startDate, endDate):
+def event_stream(user, request, startDate, endDate):
 	response = {}
 	list_activities= []
 	page=1	
@@ -43,7 +43,7 @@ def event_stream(access_token, user_id, user, request, startDate, endDate):
 			break
 				
 		if progressValueCompute==10:
-			range = ComputeDatas(list_activities, user_id, startDate, endDate)		
+			range = ComputeDatas(list_activities, user.user_id, startDate, endDate)		
 			
 			# Retreive from Strava Site finished. Update session			
 			if range:
@@ -55,11 +55,11 @@ def event_stream(access_token, user_id, user, request, startDate, endDate):
 
 				
 				if range[0]:
-					user.first_activity_date = make_aware(range[0], timezone=timezone.utc)
+					user.first_activity_date = timezone.make_aware(range[0], timezone=timezone.utc)
 				else:
 					user.first_activity_date = None
 				if range[1]:
-					user.last_activity_date = make_aware(range[1], timezone=timezone.utc)
+					user.last_activity_date = timezone.make_aware(range[1], timezone=timezone.utc)
 				else:
 					user.last_activity_date = None
 				
@@ -71,7 +71,7 @@ def event_stream(access_token, user_id, user, request, startDate, endDate):
 			
 			nbRetreived=0
 			try:
-				nbRetreived = get_one_page_activities(access_token, user_id, startDate, endDate, page, 100, list_activities)
+				nbRetreived = get_one_page_activities(user.access_token, user.user_id, startDate, endDate, page, 100, list_activities)
 			
 				#range = RetreiveFromDateInterval(access_token, user.user_id, startDate, endDate)
 			except Exception as e:
@@ -101,7 +101,7 @@ def event_stream(access_token, user_id, user, request, startDate, endDate):
 		response["progressValueCompute"] = progressValueCompute
 		str1 = str(response).replace("'", '"') # dirty code  : javascript JSON supports supports " and not single quote '
 		yield 'data: ' + str1  +' \n\n'
-		#yield 'data: The server time is: %s\n\n' % datetime.datetime.now()
+		#yield 'data: The server time is: %s\n\n' % timezone.now()
 
 		#time.sleep(0.1)
 
@@ -110,37 +110,29 @@ def viewStravaSync(request):
 	logger.debug("======> viewStravaSync. URL <" + request.path + ">")
 	
 	#check if logged
-	access_token = request.session.get('ACCESS_TOKEN', None) 			
-	if  access_token is not None:
-		#logger.debug(f"access_token retreives from session <" + str(access_token) + ">")
-		isLogged =  True
+	user = getUserModel(request)
+	if user: 
+		isLogged =  True			
+
+		#Retreive strava datas
+		#endDate = timezone.make_aware(datetime.datetime.utcnow() +  timedelta(hours=24),timezone=timezone.utc)
+		endDate = datetime.datetime.utcnow() +  timedelta(hours=24)
+		#logger.debug("endDate : " + endDate.tzname()) 			
 		
-		# retreive user table
-		user_id = request.session.get('user_id', None) 
-		user = User()	
-		try:
-			user = User.objects.get(user_id=user_id)
-		except user.DoesNotExist:
-			user = None
+		if user.last_activity_date is not None:		
+			#logger.debug("--> last_activity_date is not null")			
+			startDate = user.last_activity_date  +  timedelta(seconds=1)
+			#unset the timezone !!!
+			startDate = startDate.replace(tzinfo=None)
+		else:
+			#logger.debug("--> last_activity_date is null") #timezone=timezone.utc
+			startDate = datetime.datetime(2000, 1, 1, 0, 0 ,0)
 	
-		if user: 
-			#Retreive strava datas
-			#endDate = make_aware(datetime.datetime.utcnow() +  timedelta(hours=24),timezone=timezone.utc)
-			endDate = datetime.datetime.utcnow() +  timedelta(hours=24)
-			#logger.debug("endDate : " + endDate.tzname()) 			
-			
-			if user.last_activity_date is not None:		
-				#logger.debug("--> last_activity_date is not null")			
-				startDate = user.last_activity_date  +  timedelta(seconds=1)
-				#unset the timezone !!!
-				startDate = startDate.replace(tzinfo=None)
-			else:
-				#logger.debug("--> last_activity_date is null") #timezone=timezone.utc
-				startDate = datetime.datetime(2000, 1, 1, 0, 0 ,0)
 						
-	return StreamingHttpResponse(event_stream(access_token, user_id, user, request, startDate, endDate), content_type='text/event-stream')
-
-
+		return StreamingHttpResponse(event_stream(user, request, startDate, endDate), content_type='text/event-stream')
+	else:
+		 # ?
+		 to = 5
 
 @csrf_exempt
 def sync_ajax(request):
@@ -158,32 +150,34 @@ def sync_ajax(request):
 		response["log"] 
 	
 	return JsonResponse(response, status = 200)
+	
+def getUserModel(request):
+	user = None
+	
+	#check if logged
+	user_id = request.session.get('user_id', None)
+	if  user_id is not None:		
+		# retreive user table
+		user = User()	
+		try:
+			user = User.objects.get(user_id=user_id)
+		except user.DoesNotExist:
+			user = None
 
+	return user
 
 def viewSettingPost(request):
 	logger.debug("======> viewSettingPost. URL <" + request.path + ">")
 	actif = 3	# login active
 	isLogged = True #logged because clic on setting bouton
 	name = request.session.get('name', 'no_name') 
-	user = None
+
 	if os.environ.get('DEV'):
 		dev = True
 	else:
 		dev = False
-				
-	#check if logged
-	access_token = request.session.get('ACCESS_TOKEN', None) 			
-	if  access_token is not None:
-		isLogged =  True
 		
-		# retreive user table
-		user_id = request.session.get('user_id', None) 
-		user = User()	
-		try:
-			user = User.objects.get(user_id=user_id)
-		except user.DoesNotExist:
-			user = None
-	
+	user = getUserModel(request)
 	if user: 
 		if request.method == "POST":
 			form = PostSettings(request.POST)
@@ -197,7 +191,7 @@ def viewSettingPost(request):
 		else:
 			form = PostSettings(instance=user)
 	else:
-		raise Http404("User does not exist")
+		raise Http404("User is not connected !!!!")
 			
 	return render(request, 'settingsStrava.html', {'form': form, 'actif': actif, 'isLogged': isLogged, 'name': name})
 
@@ -210,18 +204,11 @@ def post_ajax(request):
 	listType = []
 	
 	#check if logged
-	access_token = request.session.get('ACCESS_TOKEN', None) 
+	user = getUserModel(request)
 	
-	# retreive user table
-	user_id = request.session.get('user_id', None) 
-	user = User()	
-	try:
-		user = User.objects.get(user_id=user_id)
-	except user.DoesNotExist:
-		user = None
+	access_token = user.access_token
 	
-	if  access_token is not None and id is not None:	
-	
+	if user and user.access_token and user.updated_date:
 		if request.method == "POST":
 			if 'activityType' in request.POST:
 				activityType = request.POST['activityType']	
@@ -240,8 +227,11 @@ def post_ajax(request):
 				listType.append("VirtualRide")
 			
 			if len(activityType)>0:
-				df = getStatByMonth(user_id, listType)
-				html = 	df.to_html()
+				df = getStatByMonth(user.user_id, listType)
+				if not df.empty:	
+					html = 	df.to_html()
+				else:
+					html=""
 				
 		elif statType=="year":
 			if activityType.find("run")!=-1:
@@ -261,28 +251,31 @@ def post_ajax(request):
 				listType.append("VirtualRide")
 				
 			if len(activityType)>0:
-				html = generateGraph(user_id, listType, objList)		
+				html = generateGraph(user.user_id, listType, objList)		
 				
 		elif statType=="setting":
 			html = "Settings"
 			
 							
-		elif statType=="refresh":			
-			cleanDb(user_id)
-			html = "Refreh all"
+		elif statType=="refresh":	
+			user.first_activity_date = None
+			user.last_activity_date = None
+			user.first_activity_date = None
+			user.act_number = 0
+			user.save()	
+			cleanDb(user.user_id)
+			html = ""
 			
 		elif statType=="logout":
-			#logoff
-			
-			access_token = request.session.get('ACCESS_TOKEN', None)
-			
+			#logoff		
 			if 	access_token is not None:
 				#logger.debug(f"logout. Access token <" + access_token + ">")		
-				logoff(access_token)
+				user.updated_date = None
+				user.access_token = None
+				user.save()	
+
 				
-			request.session['ACCESS_TOKEN'] = None
-				
-			html = "Logout"	
+			html = ""	
 			
 		response["data"] = html
 	
@@ -295,7 +288,7 @@ def post_ajax(request):
 	return JsonResponse(response, status = 200)
 	
 
-# Create your views here.
+# View login: callback from strava when user logs on it
 def viewLogin(request):
 	logger.debug("======> viewLogin. URL <" + request.path + ">")
 	actif = 3	
@@ -304,7 +297,7 @@ def viewLogin(request):
 	else:
 		dev = False
 		
-	isLogged = True
+	isLogged = False
 	name = "Login"
 	
 	#url = request.path
@@ -314,34 +307,12 @@ def viewLogin(request):
 		
 		logger.debug(f" user_code <" + str(user_code) + ">")		
 		
-		#check if already logged
-		temp_access_token = request.session.get('ACCESS_TOKEN', None) 
-				
-		if  temp_access_token is None:
-						
-			'''# Number of visits to this view, as counted in the session variable.
-			num_visits = request.session.get('num_visits', 0)
-			request.session['num_visits'] = num_visits + 1'''
-			
-			access_token = login(user_code)
-			
-			logger.debug(f"New access_token <" + str(access_token) + ">")
-			
-			if access_token is not None:			
-				#store the activity instance
-				request.session['ACCESS_TOKEN'] = access_token				
-
-			else:
-				isLogged =  False
+		access_token = login(user_code)
 		
-		else:
-			logger.debug(f" access_token <" + str(temp_access_token) + ">")
-			access_token = 	temp_access_token			
-
-	else:
-		html = ""
-		isLogged =  False
+		logger.debug(f"New access_token <" + str(access_token) + ">")
 		
+		if access_token is not None:			
+			isLogged = True	
 	
 	if isLogged:	
 		#retrieve the athlete infos and save it in db
@@ -362,6 +333,7 @@ def viewLogin(request):
 				user.user_id = athlete["id"]
 				
 			#user.django_user = request.user
+			user.access_token = access_token
 			user.firstname = athlete["firstname"]
 			user.lastname = athlete["lastname"]
 			user.weight = athlete["weight"]
@@ -374,18 +346,17 @@ def viewLogin(request):
 			user.measurement_preference = athlete["measurement_preference"]
 			user.ftp = int(athlete["ftp"] if athlete["ftp"] else -1)
 			user.updated_date = timezone.now()
-			user.strava_creation_date = make_aware(datetime.datetime.strptime(athlete["created_at"], '%Y-%m-%dT%H:%M:%SZ'),timezone=timezone.utc)
+			user.strava_creation_date = timezone.make_aware(datetime.datetime.strptime(athlete["created_at"], '%Y-%m-%dT%H:%M:%SZ'),timezone=timezone.utc)
 			user.save()
 		else:
 			logoff(access_token)
-			request.session['ACCESS_TOKEN'] = None
+			request.session['user_id'] = None
 			#html = f"Error in calling Strava API"
 			name ="Login"		
 		
 		return index(request, actif = 1)
 	else:
 		html = "Login failed !! "
-		request.session['ACCESS_TOKEN'] = None
 		logger.debug(f" Login failed !")
 
 	#logger.debug(f"session_key : "+ request.session.session_key)
@@ -404,128 +375,128 @@ def index(request, actif = 1):
 		dev = False
 				
 	#check if logged
-	access_token = request.session.get('ACCESS_TOKEN', None) 			
-	if  access_token is not None:
-		isLogged =  True
-		
-		# retreive user table
-		user_id = request.session.get('user_id', None) 
-		user = User()	
-		try:
-			user = User.objects.get(user_id=user_id)
-		except user.DoesNotExist:
-			user = None
-	
-		if user: 				
-			name = user.firstname + " " + user.lastname + " <i class=\"fa fa-caret-down\"></i>"
-			request.session['name'] = name	
-			#html = athlete	
+	user = getUserModel(request)
+	if user: 		
+		update_dt = user.updated_date
+		logger.debug(f"updated_date : {str(update_dt)}")
+		if update_dt:
+			update_dt = update_dt.replace(tzinfo=None)
+			if ( update_dt + datetime.timedelta(hours=1) > datetime.datetime.utcnow()):
+				logger.debug(f"updated_date ok")
+				name = user.firstname + " " + user.lastname + " <i class=\"fa fa-caret-down\"></i>"
+				request.session['name'] = name	
+				isLogged =  True
+			else:
+				logger.debug(f"updated_date ko")
+				logger.debug(str(update_dt) + " / " + str(datetime.datetime.utcnow()))
+				isLogged =  False	
 		else:
-			logger.debug("Error, user_id")
-
+			isLogged =  False	
 	else:
-		logger.debug("Error, no ACCESS_TOKEN")
+		logger.debug("Error, user model does not exists")
 		isLogged =  False
+
 		
 	return render(request, 'baseStrava.html', locals() )
 	
 
 def generateGraph(id, list, objList):
-	html = ""
-	
+	plot_div = ""
 	df = getStatAnnual(id, list, objList)
 	
-	listLines = df["year"].unique()
+	if not df.empty:	
 	
-	graphList = []
-	for line in listLines:
-		filter = df["year"] == line
-		dfFilter = df[filter]	
+		listLines = df["year"].unique()
 		
-		# objectif line
-		if line.find("km") != -1:
-			graph = go.Scatter(
-				x=dfFilter["start_date"],
-				y=dfFilter["cumul_dist"],
-				name=line,
-				opacity=1,
-				mode="lines",
-				line=dict(dash="dashdot", width=3), # dot, dash, dashdot
-				text = line,
-				marker=dict(
-					symbol="circle",
-					size=6,
-					line=dict(width=0,
-						color='DarkSlateGrey'
-						),
-				),		
-				hovertemplate = 'Objective : %{data.name}<br>%{x|%d/%m}<br>%{y:.1f} kms<extra></extra>',			
-			)
-		else:
-			# Normal line
-			graph = go.Scatter(
-				x=dfFilter["start_date"],
-				y=dfFilter["cumul_dist"],
-				customdata=dfFilter["distance"],
-				name=line,
-				opacity=1,
-				mode="markers+lines",
-				text = line,
-				marker=dict(
-					symbol="circle",
-					size=6,
-					line=dict(width=0,
-						color='DarkSlateGrey'
-						),
-				),			
-				line=dict(dash="solid", width=2), # dot, dash, dashdot
-				hovertemplate = '%{x|%d/%m}/%{data.name}<br>%{y:.1f} kms<br>Activity : %{customdata:.1f} kms<extra></extra>',
-				# https://github.com/d3/d3-3.x-api-reference/blob/master/Time-Formatting.md#format
-			)
+		graphList = []
+		for line in listLines:
+			filter = df["year"] == line
+			dfFilter = df[filter]	
+			
+			# objectif line
+			if line.find("km") != -1:
+				graph = go.Scatter(
+					x=dfFilter["start_date"],
+					y=dfFilter["cumul_dist"],
+					name=line,
+					opacity=1,
+					mode="lines",
+					line=dict(dash="dashdot", width=3), # dot, dash, dashdot
+					text = line,
+					marker=dict(
+						symbol="circle",
+						size=6,
+						line=dict(width=0,
+							color='DarkSlateGrey'
+							),
+					),		
+					hovertemplate = 'Objective : %{data.name}<br>%{x|%d/%m}<br>%{y:.1f} kms<extra></extra>',			
+				)
+			else:
+				# Normal line
+				graph = go.Scatter(
+					x=dfFilter["start_date"],
+					y=dfFilter["cumul_dist"],
+					customdata=dfFilter["distance"],
+					name=line,
+					opacity=1,
+					mode="markers+lines",
+					text = line,
+					marker=dict(
+						symbol="circle",
+						size=6,
+						line=dict(width=0,
+							color='DarkSlateGrey'
+							),
+					),			
+					line=dict(dash="solid", width=2), # dot, dash, dashdot
+					hovertemplate = '%{x|%d/%m}/%{data.name}<br>%{y:.1f} kms<br>Activity : %{customdata:.1f} kms<extra></extra>',
+					# https://github.com/d3/d3-3.x-api-reference/blob/master/Time-Formatting.md#format
+				)
+			
+			graphList.append(graph)
+			
+		dtick1 = 100 if "Run" in list else 1000
+			
+		layout = go.Layout(
+			title="Cumulative km (" + list[0] + ")" ,
+			autosize=True,
+			legend = dict(
+				title="Year :",
+				orientation="v",
+				itemclick ="toggle",
+				itemdoubleclick ="toggleothers"				
+				),
+			xaxis = dict(
+				title = "Month",
+				nticks =12
+				#tickmode = 'linear',
+				#type="start_date"
+				),
+				yaxis = dict(
+				title = "Cumul Km",
+				nticks =20,
+				dtick= dtick1
+				),
+			)	
 		
-		graphList.append(graph)
-		
-	dtick1 = 100 if "Run" in list else 1000
-		
-	layout = go.Layout(
-		title="Cumulative km (" + list[0] + ")" ,
-		autosize=True,
-		legend = dict(
-			title="Year :",
-			orientation="v",
-			itemclick ="toggle",
-			itemdoubleclick ="toggleothers"				
-			),
-		xaxis = dict(
-			title = "Month",
-			nticks =12
-			#tickmode = 'linear',
-			#type="start_date"
-			),
-			yaxis = dict(
-			title = "Cumul Km",
-			nticks =20,
-			dtick= dtick1
-			),
-		)	
-	
-	plot_div = offline.plot({"data": graphList,
-		"layout": layout},
-		include_plotlyjs=False,
-		output_type='div')
+		plot_div = offline.plot({"data": graphList,
+			"layout": layout},
+			include_plotlyjs=False,
+			output_type='div')
 
-	# bidouille pour créer une fonction de creation du plot
-	'''plot_div = re.sub(
-		r'window.PLOTLYENV=window.PLOTLYENV',
-		r'\r	function displayPlot() {\r		window.PLOTLYENV=window.PLOTLYENV',
-		plot_div)   
-		
-	plot_div = re.sub(
-		r' }',
-		r' }\r}\r	displayPlot()',
-		plot_div)'''
-		
-		
+		# bidouille pour créer une fonction de creation du plot
+		'''plot_div = re.sub(
+			r'window.PLOTLYENV=window.PLOTLYENV',
+			r'\r	function displayPlot() {\r		window.PLOTLYENV=window.PLOTLYENV',
+			plot_div)   
+			
+		plot_div = re.sub(
+			r' }',
+			r' }\r}\r	displayPlot()',
+			plot_div)'''
+			
+			
 	
 
 	return plot_div

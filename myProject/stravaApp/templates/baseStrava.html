@@ -128,23 +128,7 @@
 		modal.style.display = "none";
 	  }
 	}*/
-
 	//setTimeout( closeEvent, 5000 ); 
-	
-	$( "#progressbar-1" ).progressbar({
-		value: 0,
-		max:100
-	});
-	$( "#p1" ).html(0);
-	
-
-	//setTimeout( closeEvent, 3000 );
-
-
-	$( "#progressbar-2" ).progressbar({
-	value: 0
-	});
-	$( "#p2" ).html(0);
 
 
 	// Store the page type
@@ -157,29 +141,27 @@ sessionStorage.setItem("isLogged", "1");
 sessionStorage.setItem("isLogged", "0");
 {% endif %}	
 
-	if (isLogged() && sessionStorage.getItem("pageType") != "login")	{
-		syncStrava();
-	}
-	
 	updateMenu();
 	
 	$("#run").prop("checked", true);
 	
-	//Trigger defaut pageType
-	{% if actif != 3 %}
-	sendPostMessage(GetActivityType(), sessionStorage.getItem("pageType"));
-	{% endif %}
+	if (sessionStorage.getItem("pageType") != "login" &&
+		sessionStorage.getItem("pageType") != "refresh") {
+		if (isLogged()) {
+			syncStrava();
+		}
+	}
  
  	$("#monthLink").click(function(){
 		sessionStorage.setItem("pageType", "month");
-		sendPostMessage(GetActivityType(), "month");
-		updateMenu();
+		sendPostMessage();
+		//updateMenu();
 	});
 	
 	$("#yearLink").click(function(){
 		sessionStorage.setItem("pageType", "year");
-		sendPostMessage(GetActivityType(), "year");	
-		updateMenu();
+		sendPostMessage();	
+		//updateMenu();
 	});
 	
 	$("#loginLink").click(function(){
@@ -199,32 +181,27 @@ sessionStorage.setItem("isLogged", "0");
 		}
 	});
 	
-	$("#settingLink").click(function(){		
-		/*sessionStorage.setItem("pageType", "setting");
-		sendPostMessage(GetActivityType(), "setting");	
-		updateMenu();*/
-	});
-	
 	$("#refreshLink").click(function(){		
-		//sessionStorage.setItem("pageType", "setting");
-		sendPostMessage(GetActivityType(), "refresh");	
-		//updateMenu();*/
+		if (isLogged()) {
+			sessionStorage.setItem("pageType", "refresh");
+			sendPostMessage();	
+		}	
 	});
 	
 	$("#logoutLink").click(function(){
 		sessionStorage.setItem("pageType", "logout");
-		sendPostMessage(GetActivityType(), "logout");	
-		updateMenu();
+		sessionStorage.setItem("isLogged", "0");
+		sendPostMessage();	
 	});
  
 	$("#run").change(function(){
 			$("#ride").prop("checked", false);			
-			sendPostMessage(GetActivityType(), sessionStorage.getItem("pageType"));
+			sendPostMessage();
 	});
 
 	$("#ride").change(function(){
 			$("#run").prop("checked", false);	
-			sendPostMessage(GetActivityType(), sessionStorage.getItem("pageType"))		
+			sendPostMessage();
 	});
 
  });
@@ -249,7 +226,9 @@ function isLogged() {
 
 
  
-function sendPostMessage(activityType, pageType) {
+function sendPostMessage(pageType) {
+	activityType = GetActivityType();
+	pageType = sessionStorage.getItem("pageType");
 	// make POST ajax call
 	$('html, body').css("cursor", "wait");
 	$.ajax({
@@ -258,7 +237,7 @@ function sendPostMessage(activityType, pageType) {
 		data: "activityType=" + activityType + ";pageType=" + pageType,
 		
 		error: function (request, status, error) {
-			console.log(" ajax ko : " + request.responseText);
+			console.log(" ajax ko : " + request.status);
 			sessionStorage.setItem("isLogged", "0");
 			updateMenu();
 		},
@@ -269,16 +248,20 @@ function sendPostMessage(activityType, pageType) {
 			data = response["data"]
 			console.log(" ajax ok : " + log1)
 	
-			$("#testgv").text(function(i, origText){
+			/*$("#testgv").text(function(i, origText){
 			return log1; 
-			});
-			
-			//console.log(" data length : " +data.length);			
+			});*/
 			
 			$("#id_content").html(data);
 			///document.getElementById("id_content").innerHTML = data; // dont work !!!
 			
 			$('html, body').css("cursor", "auto");
+			
+			if (sessionStorage.getItem("pageType") == "refresh" ) {
+				syncStrava();
+			}
+			
+			updateMenu();
 		}
 	})
 
@@ -301,12 +284,13 @@ function updateMenu() {
 		$('#loginLink').css('background-color', '#222');
 		$('.typeClass').show();
 	}
-	else if (sessionStorage.getItem("pageType") == "login")
+	else if (sessionStorage.getItem("pageType") == "login" ||
+				sessionStorage.getItem("pageType") == "refresh" )
 	{
 		$('#loginLink').css('background-color', '#858585');
 		$('#monthLink').css('background-color', '#222');
 		$('#yearLink').css('background-color', '#222');
-		$('.typeClass').hide();		
+		$('.typeClass').hide();	
 	}
 
 	if (isLogged())
@@ -322,12 +306,9 @@ function updateMenu() {
 		);
 		//deactivate login button
 		$('.dropbtn').css( 'cursor', 'default');
-		
-
 	}
 	else
-	{
-		
+	{		
 		console.log("====> Not logged ")
 		$('#loginLink').html("Login ");
 		$('.dropdown').hover(
@@ -344,8 +325,21 @@ function updateMenu() {
 }
 
 function startEventListening() {	
-	if(typeof(EventSource) !== "undefined") {
+	if(typeof(EventSource) !== "undefined") {		
 		console.log("startEventListening")
+		
+		// Init values
+		$("#progressbar-1" ).progressbar({
+			value: 0,
+			max:100
+		});
+		$("#p1").html(0);
+
+		$( "#progressbar-2" ).progressbar({
+			value: 0
+			});
+		$( "#p2" ).html(0);
+		
 		source = new EventSource("{% url 'viewStravaSync' %}");
 		
 		source.onmessage = function(event) {
@@ -401,6 +395,15 @@ function progress(progressValueActivities, progressValueComput) {
 		$( "#p2" ).html(100);
 		closeEvent();
 		function hide() {
+			if (sessionStorage.getItem("pageType") != "refresh") {
+				sendPostMessage();
+			}
+			else
+			{
+				sessionStorage.setItem("pageType", "month");
+				updateMenu();
+				sendPostMessage();
+			}
 			modal.style.display = "none";
 		}
 		setTimeout( hide, 1800 ); 		
