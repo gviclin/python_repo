@@ -24,7 +24,11 @@ sudo systemctl restart nginx
 systemctl status nginx 
 
 #gunicorn
+/usr/lib/python3/dist-packages/gunicorn/config.py
 gunicorn myProject.wsgi:application
+gunicorn -c gunicorn.py myProject.wsgi:application --log-level=debug 
+
+
 
 #linux log
 sudo sed -i 's/quiet splash/quiet splash loglevel=3/' /etc/default/grub
