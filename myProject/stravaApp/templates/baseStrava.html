@@ -46,6 +46,23 @@
 		<label  style="word-wrap:break-word">
 			<input id="ride"  type="checkbox" value="Ride" />Ride
 		</label>
+		<label  style="word-wrap:break-word">
+			<input id="walk"  type="checkbox" value="Walk" />Walk
+		</label>
+	</div>			
+	</section>
+	
+	<section>
+	<div class="typeClass">
+		<label  style="word-wrap:break-word">
+			<input id="distance"  type="checkbox" value="Distance" />Distance
+		</label>
+		<label  style="word-wrap:break-word">
+			<input id="time"  type="checkbox" value="Time" />Time
+		</label>
+		<label  style="word-wrap:break-word">
+			<input id="elevation"  type="checkbox" value="Elevation" />Elevation
+		</label>
 	</div>			
 	</section>
 	
@@ -144,6 +161,7 @@ sessionStorage.setItem("isLogged", "0");
 	updateMenu();
 	
 	$("#run").prop("checked", true);
+	$("#distance").prop("checked", true);
 	
 	if (sessionStorage.getItem("pageType") != "login" &&
 		sessionStorage.getItem("pageType") != "refresh") {
@@ -195,12 +213,38 @@ sessionStorage.setItem("isLogged", "0");
 	});
  
 	$("#run").change(function(){
-			$("#ride").prop("checked", false);			
+			$("#ride").prop("checked", false);
+			$("#walk").prop("checked", false);
 			sendPostMessage();
 	});
 
 	$("#ride").change(function(){
-			$("#run").prop("checked", false);	
+			$("#run").prop("checked", false);
+			$("#walk").prop("checked", false);
+			sendPostMessage();
+	});
+	
+	$("#walk").change(function(){
+			$("#run").prop("checked", false);
+			$("#ride").prop("checked", false);
+			sendPostMessage();
+	});
+	
+	$("#distance").change(function(){
+			$("#time").prop("checked", false);
+			$("#elevation").prop("checked", false);
+			sendPostMessage();
+	});
+	
+	$("#time").change(function(){
+			$("#distance").prop("checked", false);
+			$("#elevation").prop("checked", false);
+			sendPostMessage();
+	});
+	
+	$("#elevation").change(function(){
+			$("#distance").prop("checked", false);
+			$("#time").prop("checked", false);
 			sendPostMessage();
 	});
 
@@ -213,6 +257,9 @@ function GetActivityType() {
 	}
 	if ($('#ride').is(":checked")) {
 		type.push("ride")		
+	}
+	if ($('#walk').is(":checked")) {
+		type.push("walk")		
 	}
 	return type
 }
