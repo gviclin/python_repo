@@ -161,7 +161,7 @@ def isStreamStored(activity_id):
 
 
 
-def getStatByMonth(id, list):	
+def getStatByMonth(id, listActivityType, listDataType):	
 	# create logger
 	logger = logging.getLogger('')
 	logger.setLevel(logging.DEBUG)
@@ -170,11 +170,11 @@ def getStatByMonth(id, list):
 
 	#athlete_id = 134706
 	
-	return stat.Stat_dist_by_month(id,list)	
+	return stat.Stat_dist_by_month(id,listActivityType, listDataType)	
 	
 	#wait = input("PRESS ENTER TO CONTINUE.")
 	
-def getStatAnnual(id, list,listObjective):	
+def getStatAnnual(id, listActivityType, listDataType, listObjective):	
 	# create logger
 	logger = logging.getLogger('')
 	logger.setLevel(logging.DEBUG)
@@ -183,7 +183,7 @@ def getStatAnnual(id, list,listObjective):
 	
 	#athlete_id = 134706
 	
-	return stat.Stat_dist_annual(id,list,listObjective)
+	return stat.Stat_dist_annual(id, listActivityType, listDataType,listObjective)
 	
 	#wait = input("PRESS ENTER TO CONTINUE.")
 	

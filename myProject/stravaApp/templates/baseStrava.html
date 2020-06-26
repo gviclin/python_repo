@@ -55,13 +55,13 @@
 	<section>
 	<div class="typeClass">
 		<label  style="word-wrap:break-word">
-			<input id="distance"  type="checkbox" value="Distance" />Distance
+			<input id="distance"  type="checkbox" value="Distance" />Distance (km)
 		</label>
 		<label  style="word-wrap:break-word">
 			<input id="time"  type="checkbox" value="Time" />Time
 		</label>
 		<label  style="word-wrap:break-word">
-			<input id="elevation"  type="checkbox" value="Elevation" />Elevation
+			<input id="elevation"  type="checkbox" value="Elevation" />Elevation (m)
 		</label>
 	</div>			
 	</section>
@@ -87,7 +87,7 @@
 							<span id="fp1" style="color:#cb2025;">%</span>
 						</div>
 					</div>
-					<div style="margin-bottom:10px;margin-top:15px;">Internal calculation</div>
+					<div style="margin-bottom:10px;margin-top:15px;">Compute database</div>
 					<div style="padding-bottom:20px; border-bottom:1px solid #e7e7e7;">
 						<div class="progressbarclass" id = "progressbar-2"></div>
 						<div style="display:inline-block;"><span class="pourcent" id="p2" pourcent="100">1</span>
@@ -264,6 +264,20 @@ function GetActivityType() {
 	return type
 }
 
+function GetDataType() {
+	type=[];
+	if ($('#distance').is(":checked")) {
+		type.push("distance")
+	}
+	if ($('#time').is(":checked")) {
+		type.push("time")		
+	}
+	if ($('#elevation').is(":checked")) {
+		type.push("elevation")		
+	}
+	return type
+}
+
 function isLogged() {
 	if (sessionStorage.getItem("isLogged") == 1) 
 		return true;	
@@ -275,13 +289,14 @@ function isLogged() {
  
 function sendPostMessage(pageType) {
 	activityType = GetActivityType();
+	dataType = GetDataType();
 	pageType = sessionStorage.getItem("pageType");
 	// make POST ajax call
 	$('html, body').css("cursor", "wait");
 	$.ajax({
 		type: 'POST',
 		url: "{% url 'post_ajax' %}",
-		data: "activityType=" + activityType + ";pageType=" + pageType,
+		data: "activityType=" + activityType + ";pageType=" + pageType + ";dataType=" + dataType,
 		
 		error: function (request, status, error) {
 			console.log(" ajax ko : " + request.status);
@@ -295,9 +310,9 @@ function sendPostMessage(pageType) {
 			data = response["data"]
 			console.log(" ajax ok : " + log1)
 	
-			/*$("#testgv").text(function(i, origText){
+			$("#testgv").text(function(i, origText){
 			return log1; 
-			});*/
+			});
 			
 			$("#id_content").html(data);
 			///document.getElementById("id_content").innerHTML = data; // dont work !!!

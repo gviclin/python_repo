@@ -199,9 +199,11 @@ def viewSettingPost(request):
 def post_ajax(request):
 	activityType = "No value"
 	statType = "No value"
+	dataType = "No value"
 	response = {"log":""}
 	html = ""
-	listType = []
+	listActivityType = []
+	listDataType = []
 	
 	#check if logged
 	user = getUserModel(request)
@@ -215,43 +217,31 @@ def post_ajax(request):
 				response["log"]  = "Activity type : <" + activityType + ">"
 			if 'pageType' in request.POST:
 				statType = request.POST['pageType']	
-				response["log"]  = response["log"] + " Stat type : <" + statType  +">"
+				response["log"]  = response["log"] + " Page type : <" + statType  +">"
+			if 'dataType' in request.POST:
+				dataType= request.POST['dataType']	
+				response["log"]  = response["log"] + " Data type : <" + dataType  +">"
 				
-		logger.debug("======> post_ajax. URL <" + request.path + ">. Activity type <" + activityType + ">. Page Type <" + statType + ">")
+		logger.debug("======> post_ajax. URL <" + request.path + ">. Activity type <" + activityType + ">. data Type <" + dataType + ">")
 			
 		if statType=="month":
-			if activityType.find("run")!=-1:
-				listType.append("Run")
-			if activityType.find("ride")!=-1:
-				listType.append("Ride")
-				listType.append("VirtualRide")
+			listActivityType 	= GetListActivityList(activityType)	
+			listDataType	 	= GetListDataList(dataType)	
 			
-			if len(activityType)>0:
-				df = getStatByMonth(user.user_id, listType)
+			if len(listActivityType)>0:
+				df = getStatByMonth(user.user_id, listActivityType, listDataType)
 				if not df.empty:	
 					html = 	df.to_html()
 				else:
 					html=""
 				
 		elif statType=="year":
-			if activityType.find("run")!=-1:
-				if user:
-					objList = [user.year_run_objective]
-				else:
-					objList = [500]
-				#objList = [1400,1600]
-				listType.append("Run")
-			if activityType.find("ride")!=-1:
-				if user:
-					objList = [user.year_ride_objective]
-				else:
-					objList = [500]
-				#objList = [6000,7000]
-				listType.append("Ride")
-				listType.append("VirtualRide")
-				
+			listActivityType 	= GetListActivityList(activityType)
+			listDataType	 	= GetListDataList(dataType)			
+			listObjective 		= GetListObjectiveList(activityType, user)
+			
 			if len(activityType)>0:
-				html = generateGraph(user.user_id, listType, objList)		
+				html = generateGraph(user.user_id, listActivityType, listDataType, listObjective)		
 				
 		elif statType=="setting":
 			html = "Settings"
@@ -286,7 +276,54 @@ def post_ajax(request):
 
 
 	return JsonResponse(response, status = 200)
+
+
+def GetListActivityList(activityType):
+	listActivityType =[]
+	if activityType.find("run")!=-1:
+		listActivityType.append("Run")
+	if activityType.find("ride")!=-1:
+		listActivityType.append("Ride")
+		listActivityType.append("VirtualRide")
+	if activityType.find("walk")!=-1:
+		listActivityType.append("Walk")
+		listActivityType.append("Hike")
+		
+	return listActivityType
 	
+def GetListDataList(activityType):
+	listDataType =[]
+	if activityType.find("distance")!=-1:
+		listDataType.append("distance")
+	if activityType.find("time")!=-1:
+		listDataType.append("time")
+	if activityType.find("elevation")!=-1:
+		listDataType.append("elevation")
+
+	return listDataType
+	
+	
+def GetListObjectiveList(activityType, user):
+	listObjectiveType = []
+	if activityType.find("run")!=-1:
+		if user:
+			listObjectiveType = [user.year_run_objective]
+		else:
+			listObjectiveType = [500]
+		#objList = [1400,1600]
+
+	if activityType.find("ride")!=-1:
+		if user:
+			listObjectiveType = [user.year_ride_objective]
+		else:
+			listObjectiveType = [500]
+		#objList = [6000,7000]
+		
+	if activityType.find("walk")!=-1:
+		listObjectiveType = []
+		
+	return listObjectiveType
+
 
 # View login: callback from strava when user logs on it
 def viewLogin(request):
@@ -400,9 +437,9 @@ def index(request, actif = 1):
 	return render(request, 'baseStrava.html', locals() )
 	
 
-def generateGraph(id, list, objList):
+def generateGraph(id, listActivityType, listDataType, objList):
 	plot_div = ""
-	df = getStatAnnual(id, list, objList)
+	df = getStatAnnual(id, listActivityType, listDataType, objList)
 	
 	if not df.empty:	
 	
@@ -456,10 +493,10 @@ def generateGraph(id, list, objList):
 			
 			graphList.append(graph)
 			
-		dtick1 = 100 if "Run" in list else 1000
+		dtick1 = 100 if "Run" in listActivityType else 1000
 			
 		layout = go.Layout(
-			title="Cumulative km (" + list[0] + ")" ,
+			title="Cumulative km (" + listActivityType[0] + ")" ,
 			autosize=True,
 			legend = dict(
 				title="Year :",
