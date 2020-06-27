@@ -275,15 +275,27 @@ class Statist():
 				#round to an integer
 				df_data = df_data.round(0).astype(int)
 
-				'''if dataType == "moving_time":
+				if dataType == "moving_time":
 					listColumn = list(df_data)
+					
+					def convert_date(x):
+						a = pd.to_datetime(x, unit='s')	
+						day = a.strftime('%d')
+						day = int(day)
+						if day == 1:
+							a = a.strftime('%H:%M:%S')
+						elif day ==2:
+							a = str(day-1) + " day " + a.strftime('%H:%M:%S')
+						else:
+							a = str(day-1) + " days " + a.strftime('%H:%M:%S')
+						return a
+					
+					for line in listColumn:						
+						df_data[line]= df_data[line].apply(convert_date) 
+					
+				
 
-					for line in listColumn:
-						df_data[line] = pd.to_datetime(df_data[line], unit='s')	
-						#df_data[line] = df_data[line].dt.strftime('%H:%M:%S')
-				'''
-
-				#print(df_data.info(verbose=True))
+				print(df_data.info(verbose=True))
 					
 				
 				#os.remove(os.path.join(self.strava_dir, f"stat_{'_'.join(listActivityType)}_distance_{athlete_id}.xlsx"))
