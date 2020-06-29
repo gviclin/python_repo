@@ -190,10 +190,14 @@ tr:nth-child(even){background-color: #f2f2f2;}
 
 tr:hover {background-color: #ddd;}
 
+tr {
+	text-align: center;
+}
+
 th {
   padding-top: 8x;
   padding-bottom: 8x;
-  text-align: left;
+  text-align: center;
   background-color: #848b8c;
   color: black
 }

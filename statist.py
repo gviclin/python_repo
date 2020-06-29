@@ -289,7 +289,8 @@ class Statist():
 						df_data[line] = df_data[line].apply(convert_date) 
 					
 				df_data.index.name = None
-				print(df_data)
+				
+				#print(df_data)
 				#print(df_data.info(verbose=True))
 					
 				
