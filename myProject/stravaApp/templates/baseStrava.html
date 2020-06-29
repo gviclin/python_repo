@@ -32,6 +32,7 @@
 		<div class="dropdown-content">
 		  <a href="{% url 'viewSettingPost' %}"id="settingLink">Setting</a>
 		  <a id="refreshLink">Refresh all</a>
+		  <a id="deleteLink">Delete all</a>
 		  <a id="logoutLink">Logout</a>
 		</div>
 	  </div> 
@@ -106,11 +107,11 @@
 	
 	<p>{{html}}</p>
 	
-	<section>
+	<!--section>
 		<div class="log">
 		<p id="testgv">{{html}}</p>
 		</div>
-	</section>
+	</section-->
 
 	<section>
 		<div class="content" id="id_content">
@@ -164,7 +165,8 @@ sessionStorage.setItem("isLogged", "0");
 	$("#distance").prop("checked", true);
 	
 	if (sessionStorage.getItem("pageType") != "login" &&
-		sessionStorage.getItem("pageType") != "refresh") {
+		sessionStorage.getItem("pageType") != "refresh" &&
+		sessionStorage.getItem("pageType") != "delete") {
 		if (isLogged()) {
 			syncStrava();
 		}
@@ -205,6 +207,13 @@ sessionStorage.setItem("isLogged", "0");
 			sendPostMessage();	
 		}	
 	});
+	
+	$("#deleteLink").click(function(){		
+	if (isLogged()) {
+		sessionStorage.setItem("pageType", "delete");
+		sendPostMessage();	
+	}	
+});
 	
 	$("#logoutLink").click(function(){
 		sessionStorage.setItem("pageType", "logout");
@@ -287,12 +296,14 @@ function isLogged() {
 
 
  
-function sendPostMessage(pageType) {
+function sendPostMessage() {
 	activityType = GetActivityType();
 	dataType = GetDataType();
 	pageType = sessionStorage.getItem("pageType");
 	// make POST ajax call
 	$('html, body').css("cursor", "wait");
+	//console.log(" sendPostMessage : " + " pageType=" + pageType);
+	
 	$.ajax({
 		type: 'POST',
 		url: "{% url 'post_ajax' %}",
@@ -314,13 +325,18 @@ function sendPostMessage(pageType) {
 			return log1; 
 			});
 			
-			$("#id_content").html(data);
-			///document.getElementById("id_content").innerHTML = data; // dont work !!!
-			
 			$('html, body').css("cursor", "auto");
 			
 			if (sessionStorage.getItem("pageType") == "refresh" ) {
 				syncStrava();
+			}
+			else if (sessionStorage.getItem("pageType") == "delete" ) {
+				//$('#settingLink').trigger('click');
+				$("#settingLink")[0].click();
+			}
+			else /*if (sessionStorage.getItem("pageType") != "login" )*/{
+				$("#id_content").html(data);
+				///document.getElementById("id_content").innerHTML = data; // dont work !!!
 			}
 			
 			updateMenu();
@@ -347,7 +363,8 @@ function updateMenu() {
 		$('.typeClass').show();
 	}
 	else if (sessionStorage.getItem("pageType") == "login" ||
-				sessionStorage.getItem("pageType") == "refresh" )
+				sessionStorage.getItem("pageType") == "refresh" ||
+				sessionStorage.getItem("pageType") == "delete" )
 	{
 		$('#loginLink').css('background-color', '#858585');
 		$('#monthLink').css('background-color', '#222');
@@ -357,7 +374,7 @@ function updateMenu() {
 
 	if (isLogged())
 	{
-		console.log("====> Logged ")
+		//console.log("====> Logged ")
 		//$('#loginLink').html("Gael Viclin " +  "<i class=\"fa fa-caret-down\"></i>");
 		$('.dropdown').hover(
 			  function() {
@@ -371,7 +388,7 @@ function updateMenu() {
 	}
 	else
 	{		
-		console.log("====> Not logged ")
+		//console.log("====> Not logged ")
 		$('#loginLink').html("Login ");
 		$('.dropdown').hover(
 			  function() {
@@ -388,7 +405,7 @@ function updateMenu() {
 
 function startEventListening() {	
 	if(typeof(EventSource) !== "undefined") {		
-		console.log("startEventListening")
+		//console.log("startEventListening")
 		
 		// Init values
 		$("#progressbar-1" ).progressbar({
@@ -410,7 +427,6 @@ function startEventListening() {
 			progressValueActivities = dict["progressValueActivities"]
 			progressValueCompute = dict["progressValueCompute"]
 
-			console.log('event.result : ' + result);
 			progress(progressValueActivities, progressValueCompute);
 			
 		};
@@ -461,10 +477,10 @@ function progress(progressValueActivities, progressValueComput) {
 				sendPostMessage();
 			}
 			else
-			{
-				sessionStorage.setItem("pageType", "month");
-				updateMenu();
-				sendPostMessage();
+			{	$("#settingLink")[0].click();
+				//sessionStorage.setItem("pageType", "month");
+				//updateMenu();
+				//sendPostMessage();
 			}
 			modal.style.display = "none";
 		}

@@ -280,15 +280,6 @@ class Statist():
 					listColumn = list(df_data)
 					
 					def convert_date(x):
-						'''a = pd.to_datetime(x, unit='s')	
-						day = a.strftime('%d')
-						day = int(day)
-						if day == 1:
-							a = a.strftime('%H:%M:%S')
-						elif day ==2:
-							a = str(day-1) + " day " + a.strftime('%H:%M:%S')
-						else:
-							a = str(day-1) + " days " + a.strftime('%H:%M:%S')'''
 						hour = floor(x /3600)
 						remaing_sec = x - hour * 3600
 						minute = floor(remaing_sec /60)
@@ -297,8 +288,8 @@ class Statist():
 					for line in listColumn:						
 						df_data[line] = df_data[line].apply(convert_date) 
 					
-				
-
+				df_data.index.name = None
+				print(df_data)
 				#print(df_data.info(verbose=True))
 					
 				

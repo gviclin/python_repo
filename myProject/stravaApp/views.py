@@ -222,7 +222,7 @@ def post_ajax(request):
 				dataType= request.POST['dataType']	
 				response["log"]  = response["log"] + " Data type : <" + dataType  +">"
 				
-		logger.debug("======> post_ajax. URL <" + request.path + ">. Activity type <" + activityType + ">. data Type <" + dataType + ">")
+		logger.debug("======> post_ajax. URL <" + request.path + ">. Stat type <" + statType + ">. Activity type <" + activityType + ">. Data Type <" + dataType + ">")
 			
 		if statType=="month":
 			listActivityType 	= GetListActivityList(activityType)	
@@ -248,6 +248,15 @@ def post_ajax(request):
 			
 							
 		elif statType=="refresh":	
+			user.first_activity_date = None
+			user.last_activity_date = None
+			user.first_activity_date = None
+			user.act_number = 0
+			user.save()	
+			cleanDb(user.user_id)
+			html = ""
+			
+		elif statType=="delete":	
 			user.first_activity_date = None
 			user.last_activity_date = None
 			user.first_activity_date = None
