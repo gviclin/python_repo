@@ -498,6 +498,7 @@ def generateGraph(id, listActivityType, listDataType, objList):
 		layout = go.Layout(
 			title="Cumulative km (" + listActivityType[0] + ")" ,
 			autosize=True,
+			xaxis_tickformat = '%-d-%b',
 			legend = dict(
 				title="Year :",
 				orientation="v",
@@ -510,7 +511,7 @@ def generateGraph(id, listActivityType, listDataType, objList):
 				#tickmode = 'linear',
 				#type="start_date"
 				),
-				yaxis = dict(
+			yaxis = dict(
 				title = "Cumul Km",
 				nticks =20,
 				dtick= dtick1

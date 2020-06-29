@@ -7,6 +7,7 @@ import cv2
 import cufflinks as cf
 import plotly.express as px
 import pytz
+from math import *
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -279,7 +280,7 @@ class Statist():
 					listColumn = list(df_data)
 					
 					def convert_date(x):
-						a = pd.to_datetime(x, unit='s')	
+						'''a = pd.to_datetime(x, unit='s')	
 						day = a.strftime('%d')
 						day = int(day)
 						if day == 1:
@@ -287,15 +288,18 @@ class Statist():
 						elif day ==2:
 							a = str(day-1) + " day " + a.strftime('%H:%M:%S')
 						else:
-							a = str(day-1) + " days " + a.strftime('%H:%M:%S')
-						return a
+							a = str(day-1) + " days " + a.strftime('%H:%M:%S')'''
+						hour = floor(x /3600)
+						remaing_sec = x - hour * 3600
+						minute = floor(remaing_sec /60)
+						return str(hour).zfill(2) + "h" + str(minute).zfill(2)
 					
 					for line in listColumn:						
-						df_data[line]= df_data[line].apply(convert_date) 
+						df_data[line] = df_data[line].apply(convert_date) 
 					
 				
 
-				print(df_data.info(verbose=True))
+				#print(df_data.info(verbose=True))
 					
 				
 				#os.remove(os.path.join(self.strava_dir, f"stat_{'_'.join(listActivityType)}_distance_{athlete_id}.xlsx"))
