@@ -470,6 +470,7 @@ def generateGraph(id, listActivityType, listDataType, objList):
 			dataType = "distance"
 			layout_title = "Cumulative distance (" + listActivityType[0] + ")"
 			yaxis_title = "Km"
+			yaxis_tickformat1=""
 			tickmode1="auto"
 			dtick1 = 100 if "Run" in listActivityType else 1000
 			nticks1 = 20
@@ -480,14 +481,17 @@ def generateGraph(id, listActivityType, listDataType, objList):
 			dataType = "moving_time"
 			layout_title = "Cumulative moving time (" + listActivityType[0] + ")"
 			yaxis_title = "Time"
+			yaxis_tickformat1=".3f" #'%e days'
 			tickmode1="auto"
 			dtick1 = 0
 			nticks1 = 0
-			hovertemplate1 = '%{x|%d/%m}/%{data.name}<br>%{y|%H:%M:%S} <br>Activity : %{customdata} <extra></extra>'
+			#hovertemplate1 = '%{x|%d/%m}/%{data.name}<br>%{y|(%e days %X} <br>Activity : %{customdata|%X} <extra></extra>'
+			hovertemplate1 = '%{x|%d/%m}/%{data.name}<br>%{y:.2f}:%{y:.2f} <br>Activity : %{customdata|%X} <extra></extra>'
 		elif listDataType[0] == "elevation":
 			dataType = "total_elevation_gain"
 			layout_title = "Cumulative elevation gain (" + listActivityType[0] + ")"
 			yaxis_title = "Meters"
+			yaxis_tickformat1=""
 			tickmode1="auto"
 			dtick1 = 0
 			nticks1 = 0
@@ -497,10 +501,13 @@ def generateGraph(id, listActivityType, listDataType, objList):
 		
 		if listDataType[0] == "time":
 			#convert to time
-			df["cumul"] = pd.to_timedelta(df["cumul"], unit='s')
-			df["moving_time"] = pd.to_timedelta(df["moving_time"], unit='s')
+			# time delta issue : https://github.com/plotly/plotly.py/issues/801
+			'''df["cumul"] = pd.to_timedelta(df["cumul"], unit='s') + pd.to_datetime('1970/01/01')
+			df["moving_time"] = pd.to_timedelta(df["moving_time"], unit='s') + pd.to_datetime('1970/01/01')'''
 		
 		print(str(df))
+		print(df.dtypes)
+		print(df.index)
 		#print(tabulate(df, headers='keys', tablefmt='psql'))
 						
 		if not df.empty:	
@@ -560,6 +567,7 @@ def generateGraph(id, listActivityType, listDataType, objList):
 				title= layout_title ,
 				autosize=True,
 				xaxis_tickformat = '%-d-%b',
+				yaxis_tickformat = yaxis_tickformat1,
 				legend = dict(
 					title="Year :",
 					orientation="v",
