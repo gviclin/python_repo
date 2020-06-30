@@ -25,6 +25,7 @@
 	<!-- navbar-->
 	<div class="navbar">
 	  <a id="monthLink">By month</a>
+	  <a id="weekLink">By week</a>
 	  <a id="yearLink">Year progression</a>
 	  <div class="dropdown" style="float:right;">
 		<button class="dropbtn" id="loginLink">{% autoescape off %}{{name}}{% endautoescape %}
@@ -153,6 +154,7 @@
 {% if actif == 1 %}sessionStorage.setItem("pageType", "month");{% endif %}
 {% if actif == 2 %}sessionStorage.setItem("pageType", "year");{% endif %}
 {% if actif == 3 %}sessionStorage.setItem("pageType", "login");{% endif %}	
+{% if actif == 4 %}sessionStorage.setItem("pageType", "week");{% endif %}
 {% if isLogged %} 
 sessionStorage.setItem("isLogged", "1");
 {% else %}
@@ -174,6 +176,12 @@ sessionStorage.setItem("isLogged", "0");
  
  	$("#monthLink").click(function(){
 		sessionStorage.setItem("pageType", "month");
+		sendPostMessage();
+		//updateMenu();
+	});
+	
+	$("#weekLink").click(function(){
+		sessionStorage.setItem("pageType", "week");
 		sendPostMessage();
 		//updateMenu();
 	});
@@ -351,13 +359,23 @@ function updateMenu() {
 	if (sessionStorage.getItem("pageType") == "month")
 	{
 		$('#monthLink').css('background-color', '#858585');
+		$('#weekLink').css('background-color', '#222');
 		$('#yearLink').css('background-color', '#222');
+		$('#loginLink').css('background-color', '#222');
+		$('.typeClass').show();
+	}
+	else if (sessionStorage.getItem("pageType") == "week")
+	{
+		$('#weekLink').css('background-color', '#858585');
+		$('#yearLink').css('background-color', '#222');
+		$('#monthLink').css('background-color', '#222');
 		$('#loginLink').css('background-color', '#222');
 		$('.typeClass').show();
 	}
 	else if (sessionStorage.getItem("pageType") == "year")
 	{
 		$('#yearLink').css('background-color', '#858585');
+		$('#weekLink').css('background-color', '#222');
 		$('#monthLink').css('background-color', '#222');
 		$('#loginLink').css('background-color', '#222');
 		$('.typeClass').show();
@@ -367,6 +385,7 @@ function updateMenu() {
 				sessionStorage.getItem("pageType") == "delete" )
 	{
 		$('#loginLink').css('background-color', '#858585');
+		$('#weekLink').css('background-color', '#222');
 		$('#monthLink').css('background-color', '#222');
 		$('#yearLink').css('background-color', '#222');
 		$('.typeClass').hide();	

@@ -114,6 +114,7 @@ class Statist():
 			#add year / month columns
 			newDf['year'] = pd.DatetimeIndex(newDf['start_date']).year
 			newDf['month'] = pd.DatetimeIndex(newDf['start_date']).month
+			newDf['week'] = pd.DatetimeIndex(newDf['start_date']).week
 			
 			newDf['month'] = newDf['month'].apply(str)
 			newDf['year'] = newDf['year'].apply(str)
@@ -164,7 +165,7 @@ class Statist():
 		existingDf.to_parquet(f_parquet)
 		
 		#Store the dataframe in excell file
-		#existingDf.to_excel(os.path.join(self.strava_dir, f"global_data_{athlete_id}.xlsx"))
+		existingDf.to_excel(os.path.join(self.strava_dir, f"global_data_{athlete_id}.xlsx"))
 
 		#Store the dataframe in html file
 		#existingDf.to_html(os.path.join(self.strava_dir, f"global_data_{athlete_id}.html"))
@@ -332,7 +333,158 @@ class Statist():
 				self.logger.debug("no data list")
 		return df_data
 		
-	
+
+
+
+	def Stat_dist_by_week(self,athlete_id, listActivityType, listDataType):
+		""" Compute_the_db 
+		activityType : "Run", "Hike", "VirtualRide", "VirtualRun", "Walk","Ride"
+		Returns
+		-------
+		Make stat by month and activity type
+		"""
+		df_data = pd.DataFrame()
+		
+		
+		# Read global data file
+		f_parquet = os.path.join(self.strava_dir, f"global_data_{athlete_id}.parquet")
+		
+		if not os.path.isfile(f_parquet):
+			self.logger.debug("f_parquet file does not exist !!!" )
+			return df_data
+		
+		df = pd.read_parquet(f_parquet)
+		
+		
+		if not df.empty:		
+			# Filter by type of activity
+			filter = df["type"].isin(listActivityType)
+			df_type = df[filter]		
+		
+			df_by_month = df_type.groupby(['year','month']).sum()
+			
+			print(df_by_month)
+			
+			df_by_month = df_by_month[["distance","moving_time","total_elevation_gain"]]
+			
+			#df_by_month.drop('elapsed_time', axis=1,inplace=True)
+			
+			df_by_month["avg_speed"] = round(3600 * df_by_month["distance"] / df_by_month["moving_time"],1)
+			df_by_month["avg_elev_by_10km"] = round(10 * df_by_month["total_elevation_gain"] / df_by_month["distance"],0)
+			'''
+			df_by_month.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(listActivityType)}_by_month_{athlete_id}.html"))
+			df_by_month.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(listActivityType)}_by_month_{athlete_id}.xlsx"))
+			'''
+			#print(tabulate(df, headers='keys', tablefmt='psql'))
+			#pp.pprint(file_data)		
+			#print(df.dtypes)
+
+			#stat by month and year
+			dataType =""
+			if len(listDataType):
+				if listDataType[0] == "distance":
+					dataType = "distance"
+				elif listDataType[0] == "time":
+					dataType = "moving_time"
+				elif listDataType[0] == "elevation":
+					dataType = "total_elevation_gain"
+					
+				self.logger.debug("dataType : " + dataType)
+				
+				df_data = df_by_month[[dataType]]	
+					
+				df_data.reset_index(level="year", inplace=True)
+				df_data.reset_index(level="month", inplace=True)		
+				df_data = df_data.pivot(index='year', columns='month', values=dataType)
+				#df_data.reset_index(inplace=True)	
+				
+				#add annual stat
+				df_data["total"] = df_data.sum(axis=1)
+				
+				df_data.fillna(0, inplace=True)
+				df_data = df_data.round(1)
+				
+			
+				'''df=cf.datagen.lines(4)
+				fig = df.iplot(asFigure=True, hline=[2,4], vline=['2015-02-10'])
+				fig.show()'''
+						
+				#df_data["year"] = pd.to_numeric(df_data["year"])
+				#df_data.set_index("year")
+				df_data.drop('total', axis=1,inplace=True)
+				df_data = df_data.T
+				df_data.reset_index(inplace=True)
+				df_data["month"] = pd.to_numeric(df_data["month"])	
+				df_data.sort_values(by='month',inplace =True)		
+				
+				#Create a column with the month string
+				df_data['month_str'] = df_data.apply(lambda row: datetime.date(1900, int(row["month"]), 1).strftime('%B'), axis=1)
+				df_data.set_index("month_str",inplace=True)
+				df_data.loc["Total"] = df_data.sum()
+				
+				df_data.drop('month',inplace=True,axis=1)
+				
+				#round to an integer
+				df_data = df_data.round(0).astype(int)
+
+				if dataType == "moving_time":
+					listColumn = list(df_data)
+					
+					def convert_date(x):
+						hour = floor(x /3600)
+						remaing_sec = x - hour * 3600
+						minute = floor(remaing_sec /60)
+						return str(hour).zfill(2) + "h" + str(minute).zfill(2)
+					
+					for line in listColumn:						
+						df_data[line] = df_data[line].apply(convert_date) 
+					
+				df_data.index.name = None
+				
+				#print(df_data)
+				#print(df_data.info(verbose=True))
+					
+				
+				#os.remove(os.path.join(self.strava_dir, f"stat_{'_'.join(listActivityType)}_distance_{athlete_id}.xlsx"))
+				
+				df_data.to_parquet(os.path.join(self.strava_dir, f"stat_{'_'.join(listActivityType)}_{dataType}_{athlete_id}.parquet"))
+				df_data.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(listActivityType)}_{dataType}_{athlete_id}.html"))
+				#df_data.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(listActivityType)}_{dataType}_{athlete_id}.xlsx"))
+				'''
+				print("")
+				print("type :",listActivityType)
+				print(df_data.info(verbose=True))
+				#print(df_data)
+				print(tabulate(df_data, headers='keys', tablefmt='psql'))
+				
+				series_x = df_data["month_str"]
+				df_data.drop("month", axis=1,inplace=True)
+				list_month = list(df_data.columns)
+				list_month.remove("month_str")
+						
+				fig = df_data.iplot(asFigure=True, xTitle="Month",
+				yTitle="Distance", title="By month", x='month_str',y=list_month,
+					mode = "lines+markers")
+				fig.show()
+				'''
+				'''		
+				fig, ax = plt.subplots()
+				ax.set_title('Month statistics')
+				ax.plot(
+						series_x, df_data, 'x-'
+						)
+				ax.legend(list(df_data.columns.values), loc='upper right')
+				fig.autofmt_xdate()
+				plt.grid(True)			
+				plt.show()'''
+				
+				#self.logger.debug("end of stat_by_year")
+			else:
+				self.logger.debug("no data list")
+		return df_data
+		
+
+
 	
 	def Stat_dist_annual(self,athlete_id, listActivityType, listDataType, dist_goal_list = [0]):
 		""" Compute_the_db 

@@ -234,6 +234,18 @@ def post_ajax(request):
 					html = 	df.to_html()
 				else:
 					html=""
+		
+		if statType=="week":
+			listActivityType 	= GetListActivityList(activityType)	
+			listDataType	 	= GetListDataList(dataType)	
+			
+			if len(listActivityType)>0:
+				df = getStatByWeek(user.user_id, listActivityType, listDataType)
+				if not df.empty:	
+					html = 	df.to_html()
+				else:
+					html=""
+		
 				
 		elif statType=="year":
 			listActivityType 	= GetListActivityList(activityType)
