@@ -278,15 +278,14 @@ class Statist():
 					end = 52
 				else:
 					begin = 1
-					end = 1
-					
+					end = 1					
 				for i in range(begin, end +1, 1):
 					if 	i not in l:	
 						df_data.loc[i] = 0						
 				df_data.sort_index(inplace=True, ascending=True)				
 				
-				print(df_data.info(verbose=True))					
-				print(tabulate(df_data, headers='keys', tablefmt='psql'))
+				#print(df_data.info(verbose=True))					
+				#print(tabulate(df_data, headers='keys', tablefmt='psql'))
 				
 				df_data.reset_index(inplace=True)
 									
