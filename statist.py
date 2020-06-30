@@ -54,7 +54,7 @@ class Statist():
 
 		#self.logger.debug(activities_dir)
 		i = 0
-		list = []
+		listAct = []
 		for a in list_activities:
 			file_data = a.to_dict()
 			#logger.debug("file_data" + str(file_data))
@@ -96,15 +96,15 @@ class Statist():
 					
 				df_temp = pd.DataFrame(file_data, index=[file_data["id"]])
 
-				list.append(df_temp)
+				listAct.append(df_temp)
 				i +=1
 				'''if i >20:
 					break'''
 		
 		#concatenate all dataframe
 		newDf = pd.DataFrame()
-		if list:		
-			newDf = pd.concat(list)
+		if listAct:		
+			newDf = pd.concat(listAct)
 
 			newDf['start_date'] =  pd.to_datetime(newDf['start_date'], format='%Y-%m-%dT%H:%M:%SZ')#, utc=True)
 			#newDf.drop('start_date', axis=1,inplace=True)
@@ -118,6 +118,7 @@ class Statist():
 			
 			newDf['month'] = newDf['month'].apply(str)
 			newDf['year'] = newDf['year'].apply(str)
+			newDf['week'] = newDf['week'].apply(str)
 			
 			newDf.sort_values(by='start_date', inplace=True, ascending=True)
 			
@@ -165,7 +166,7 @@ class Statist():
 		existingDf.to_parquet(f_parquet)
 		
 		#Store the dataframe in excell file
-		existingDf.to_excel(os.path.join(self.strava_dir, f"global_data_{athlete_id}.xlsx"))
+		#existingDf.to_excel(os.path.join(self.strava_dir, f"global_data_{athlete_id}.xlsx"))
 
 		#Store the dataframe in html file
 		#existingDf.to_html(os.path.join(self.strava_dir, f"global_data_{athlete_id}.html"))
@@ -361,19 +362,20 @@ class Statist():
 			filter = df["type"].isin(listActivityType)
 			df_type = df[filter]		
 		
-			df_by_month = df_type.groupby(['year','month']).sum()
+			df_by_week = df_type.groupby(['year','week']).sum()
 			
-			print(df_by_month)
+			df_by_week = df_by_week[["distance","moving_time","total_elevation_gain"]]
 			
-			df_by_month = df_by_month[["distance","moving_time","total_elevation_gain"]]
+			print (df_by_week)
+
 			
-			#df_by_month.drop('elapsed_time', axis=1,inplace=True)
+			#df_by_week.drop('elapsed_time', axis=1,inplace=True)
 			
-			df_by_month["avg_speed"] = round(3600 * df_by_month["distance"] / df_by_month["moving_time"],1)
-			df_by_month["avg_elev_by_10km"] = round(10 * df_by_month["total_elevation_gain"] / df_by_month["distance"],0)
+			df_by_week["avg_speed"] = round(3600 * df_by_week["distance"] / df_by_week["moving_time"],1)
+			df_by_week["avg_elev_by_10km"] = round(10 * df_by_week["total_elevation_gain"] / df_by_week["distance"],0)
 			'''
-			df_by_month.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(listActivityType)}_by_month_{athlete_id}.html"))
-			df_by_month.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(listActivityType)}_by_month_{athlete_id}.xlsx"))
+			df_by_week.to_html(os.path.join(self.strava_dir, f"stat_{'_'.join(listActivityType)}_by_month_{athlete_id}.html"))
+			df_by_week.to_excel(os.path.join(self.strava_dir, f"stat_{'_'.join(listActivityType)}_by_month_{athlete_id}.xlsx"))
 			'''
 			#print(tabulate(df, headers='keys', tablefmt='psql'))
 			#pp.pprint(file_data)		
@@ -391,11 +393,11 @@ class Statist():
 					
 				self.logger.debug("dataType : " + dataType)
 				
-				df_data = df_by_month[[dataType]]	
+				df_data = df_by_week[[dataType]]	
 					
 				df_data.reset_index(level="year", inplace=True)
-				df_data.reset_index(level="month", inplace=True)		
-				df_data = df_data.pivot(index='year', columns='month', values=dataType)
+				df_data.reset_index(level="week", inplace=True)		
+				df_data = df_data.pivot(index='year', columns='week', values=dataType)
 				#df_data.reset_index(inplace=True)	
 				
 				#add annual stat
@@ -414,15 +416,15 @@ class Statist():
 				df_data.drop('total', axis=1,inplace=True)
 				df_data = df_data.T
 				df_data.reset_index(inplace=True)
-				df_data["month"] = pd.to_numeric(df_data["month"])	
-				df_data.sort_values(by='month',inplace =True)		
+				df_data["week"] = pd.to_numeric(df_data["week"])	
+				df_data.sort_values(by='week',inplace =True)		
 				
 				#Create a column with the month string
-				df_data['month_str'] = df_data.apply(lambda row: datetime.date(1900, int(row["month"]), 1).strftime('%B'), axis=1)
+				'''df_data['month_str'] = df_data.apply(lambda row: datetime.date(1900, int(row["month"]), 1).strftime('%B'), axis=1)
 				df_data.set_index("month_str",inplace=True)
 				df_data.loc["Total"] = df_data.sum()
 				
-				df_data.drop('month',inplace=True,axis=1)
+				df_data.drop('month',inplace=True,axis=1)'''
 				
 				#round to an integer
 				df_data = df_data.round(0).astype(int)
