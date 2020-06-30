@@ -10,6 +10,9 @@ from .forms import PostSettings
 from datetime import datetime, tzinfo
 import pytz
 
+from tabulate import tabulate
+#import pprint 
+
 from loguru import logger
 #from django.utils.timezone import make_aware
 
@@ -229,9 +232,9 @@ def post_ajax(request):
 			listDataType	 	= GetListDataList(dataType)	
 			
 			if len(listActivityType)>0:
-				df = getStatByMonth(user.user_id, listActivityType, listDataType)
+				df = getStatBy("month", user.user_id, listActivityType, listDataType)
 				if not df.empty:	
-					html = 	df.to_html()
+					html = 	df.to_html(index_names=True)
 				else:
 					html=""
 		
@@ -240,9 +243,9 @@ def post_ajax(request):
 			listDataType	 	= GetListDataList(dataType)	
 			
 			if len(listActivityType)>0:
-				df = getStatByWeek(user.user_id, listActivityType, listDataType)
+				df = getStatBy("week", user.user_id, listActivityType, listDataType)
 				if not df.empty:	
-					html = 	df.to_html()
+					html = 	df.to_html(index_names=True)
 				else:
 					html=""
 		
@@ -462,12 +465,15 @@ def generateGraph(id, listActivityType, listDataType, objList):
 	plot_div = ""
 	df = getStatAnnual(id, listActivityType, listDataType, objList)
 	
+	#print(tabulate(df, headers='keys', tablefmt='psql'))
+					
 	if not df.empty:	
-	
+		df["year"] = df["year"].apply(str)
 		listLines = df["year"].unique()
 		
 		graphList = []
 		for line in listLines:
+			#print("listLine : " + str(line))
 			filter = df["year"] == line
 			dfFilter = df[filter]	
 			
