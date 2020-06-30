@@ -31,7 +31,7 @@
 		<button class="dropbtn" id="loginLink">{% autoescape off %}{{name}}{% endautoescape %}
 		</button>
 		<div class="dropdown-content">
-		  <a href="{% url 'viewSettingPost' %}"id="settingLink">Setting</a>
+		  <a href="{% url 'viewSettingPost' %}"id="settingLink">Settings</a>
 		  <a id="refreshLink">Refresh all</a>
 		  <a id="deleteLink">Delete all</a>
 		  <a id="logoutLink">Logout</a>
@@ -163,7 +163,7 @@ sessionStorage.setItem("isLogged", "0");
 
 	updateMenu();
 	
-	$("#walk").prop("checked", true);
+	$("#run").prop("checked", true);
 	$("#distance").prop("checked", true);
 	
 	if (sessionStorage.getItem("pageType") != "login" &&

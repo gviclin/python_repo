@@ -250,6 +250,9 @@ class Statist():
 						
 				df_data.fillna(0, inplace=True)
 				
+				print(df_data.info(verbose=True))		
+				print(tabulate(df_data, headers='keys', tablefmt='psql'))
+				
 				#fill empty year
 				listYear = list(df_data.index.values)
 				for year in range(df_data.index.min() , df_data.index.max(), 1):
@@ -257,8 +260,7 @@ class Statist():
 						df_data.loc[year] = 0						
 				df_data.sort_index(inplace=True, ascending=True)
 					
-				#print(df_data.info(verbose=True))		
-				#print(tabulate(df_data, headers='keys', tablefmt='psql'))
+
 						
 				'''df=cf.datagen.lines(4)
 				fig = df.iplot(asFigure=True, hline=[2,4], vline=['2015-02-10'])
@@ -369,7 +371,7 @@ class Statist():
 		return df_data	
 
 	
-	def Stat_dist_annual(self,athlete_id, listActivityType, listDataType, dist_goal_list = [0]):
+	def Stat_dist_annual(self,athlete_id, listActivityType, dataType, dist_goal_list = [0]):
 		""" Compute_the_db 
 		listActivityType : "Run", "Hike", "VirtualRide", "VirtualRun", "Walk","Ride"
 		Returns
@@ -381,6 +383,7 @@ class Statist():
 		
 		if not os.path.isfile(f_parquet):
 			return pd.DataFrame()
+			
 		
 		df = pd.read_parquet(f_parquet)
 		
@@ -389,7 +392,7 @@ class Statist():
 		df = df[filter]	
 		
 		#df = df[["year","month","start_date","distance","elapsed_time","moving_time","total_elevation_gain"]]
-		df = df[["year","month","start_date","distance","id"]]
+		df = df[["year","month","start_date",dataType, "id"]]
 		
 		df.id = df.id.astype(int)
 		
@@ -397,29 +400,30 @@ class Statist():
 		
 		df.set_index("start_date",inplace=True, drop=False)
 		
-		df['cumul_dist'] = df.groupby(df.index.year)["distance"].cumsum()		
+		df['cumul'] = df.groupby(df.index.year)[dataType].cumsum()
 		
 		df["start_date"] = df.apply(lambda row:  row["start_date"].replace(year = 1904), axis=1)
 		
-		df = df[["year","month","start_date","cumul_dist","distance","id"]]
+		df = df[["year","month","start_date","cumul",dataType,"id"]]
 		
 		#distance goal
-		for goal in dist_goal_list:
-			strGoal =   f"{goal} km"
-			dt_goal = pd.date_range(datetime.datetime(1904, 1, 1,0,0,0), periods=365, freq='D')
-			ts = pd.Series(range(len(dt_goal)), index=dt_goal)
-			frame = { 'cumul_dist': ts } 
-			result = pd.DataFrame(frame) 
-			result["cumul_dist"] = result.apply(lambda row:  goal * row["cumul_dist"] / 364, axis=1)
-			#result["distance"] = result.apply(lambda row:  goal / 364, axis=1)
-			result.reset_index(inplace=True)
-			result['month'] = pd.DatetimeIndex(result['index']).month		
-			result['month'] = result['month'].apply(str)
-			result['year'] = strGoal
-			result['id'] = 0		
-			result.rename({'index': 'start_date'}, axis=1, inplace=True)
-			result.set_index(keys="start_date", inplace=True, drop=False)			
-			df = pd.concat([df,result])
+		if dataType=="distance":
+			for goal in dist_goal_list:
+				strGoal =   f"{goal} km"
+				dt_goal = pd.date_range(datetime.datetime(1904, 1, 1,0,0,0), periods=365, freq='D')
+				ts = pd.Series(range(len(dt_goal)), index=dt_goal)
+				frame = { 'cumul': ts } 
+				result = pd.DataFrame(frame) 
+				result["cumul"] = result.apply(lambda row:  goal * row["cumul"] / 364, axis=1)
+				#result["distance"] = result.apply(lambda row:  goal / 364, axis=1)
+				result.reset_index(inplace=True)
+				result['month'] = pd.DatetimeIndex(result['index']).month		
+				result['month'] = result['month'].apply(str)
+				result['year'] = strGoal
+				result['id'] = 0		
+				result.rename({'index': 'start_date'}, axis=1, inplace=True)
+				result.set_index(keys="start_date", inplace=True, drop=False)			
+				df = pd.concat([df,result])
 		'''
 		print("")
 		print("type :",listActivityType)
@@ -435,12 +439,12 @@ class Statist():
 		fig = px.line(
 			df,
 			 x="start_date",
-			  y="cumul_dist",
+			  y="cumul",
 			  line_group="year",
 			  color="year",
 			  custom_data=["id","year","distance"],
 			  #hover_name=df["distance"]
-			  #hover_data=["month", "cumul_dist"]
+			  #hover_data=["month", "cumul"]
 			  )
 		#All traces	  
 		fig.update_traces(
@@ -511,7 +515,7 @@ class Statist():
 		'''
 		
 		'''fig = df.iplot(asFigure=True, xTitle="Month",
-		yTitle="Distance", title="Annual statistics", x="dt",y="cumul_dist",
+		yTitle="Distance", title="Annual statistics", x="dt",y="cumul",
 		mode = "lines")
 		fig.show()'''
 		

@@ -462,106 +462,141 @@ def index(request, actif = 1):
 	
 
 def generateGraph(id, listActivityType, listDataType, objList):
-	plot_div = ""
-	df = getStatAnnual(id, listActivityType, listDataType, objList)
+	plot_div = ""	
+	dataType =""
 	
-	#print(tabulate(df, headers='keys', tablefmt='psql'))
-					
-	if not df.empty:	
-		df["year"] = df["year"].apply(str)
-		listLines = df["year"].unique()
+	if len(listDataType):
+		if listDataType[0] == "distance":
+			dataType = "distance"
+			layout_title = "Cumulative distance (" + listActivityType[0] + ")"
+			yaxis_title = "Km"
+			tickmode1="auto"
+			dtick1 = 100 if "Run" in listActivityType else 1000
+			nticks1 = 20
+			#https://github.com/d3/d3-3.x-api-reference/blob/master/Formatting.md#d3_format
+			#https://github.com/d3/d3-3.x-api-reference/blob/master/Time-Formatting.md#format
+			hovertemplate1 = '%{x|%d/%m}/%{data.name}<br>%{y:.1f} kms<br>Activity : %{customdata:.1f} kms<extra></extra>'
+		elif listDataType[0] == "time":			
+			dataType = "moving_time"
+			layout_title = "Cumulative moving time (" + listActivityType[0] + ")"
+			yaxis_title = "Time"
+			tickmode1="auto"
+			dtick1 = 0
+			nticks1 = 0
+			hovertemplate1 = '%{x|%d/%m}/%{data.name}<br>%{y|%H:%M:%S} <br>Activity : %{customdata} <extra></extra>'
+		elif listDataType[0] == "elevation":
+			dataType = "total_elevation_gain"
+			layout_title = "Cumulative elevation gain (" + listActivityType[0] + ")"
+			yaxis_title = "Meters"
+			tickmode1="auto"
+			dtick1 = 0
+			nticks1 = 0
+			hovertemplate1 = '%{x|%d/%m}/%{data.name}<br>%{y:.0f} meters<br>Activity : %{customdata:.0f} meters<extra></extra>'
+	
+		df = getStatAnnual(id, listActivityType, dataType, objList)
 		
-		graphList = []
-		for line in listLines:
-			#print("listLine : " + str(line))
-			filter = df["year"] == line
-			dfFilter = df[filter]	
-			
-			# objectif line
-			if line.find("km") != -1:
-				graph = go.Scatter(
-					x=dfFilter["start_date"],
-					y=dfFilter["cumul_dist"],
-					name=line,
-					opacity=1,
-					mode="lines",
-					line=dict(dash="dashdot", width=3), # dot, dash, dashdot
-					text = line,
-					marker=dict(
-						symbol="circle",
-						size=6,
-						line=dict(width=0,
-							color='DarkSlateGrey'
-							),
-					),		
-					hovertemplate = 'Objective : %{data.name}<br>%{x|%d/%m}<br>%{y:.1f} kms<extra></extra>',			
-				)
-			else:
-				# Normal line
-				graph = go.Scatter(
-					x=dfFilter["start_date"],
-					y=dfFilter["cumul_dist"],
-					customdata=dfFilter["distance"],
-					name=line,
-					opacity=1,
-					mode="markers+lines",
-					text = line,
-					marker=dict(
-						symbol="circle",
-						size=6,
-						line=dict(width=0,
-							color='DarkSlateGrey'
-							),
-					),			
-					line=dict(dash="solid", width=2), # dot, dash, dashdot
-					hovertemplate = '%{x|%d/%m}/%{data.name}<br>%{y:.1f} kms<br>Activity : %{customdata:.1f} kms<extra></extra>',
-					# https://github.com/d3/d3-3.x-api-reference/blob/master/Time-Formatting.md#format
-				)
-			
-			graphList.append(graph)
-			
-		dtick1 = 100 if "Run" in listActivityType else 1000
-			
-		layout = go.Layout(
-			title="Cumulative km (" + listActivityType[0] + ")" ,
-			autosize=True,
-			xaxis_tickformat = '%-d-%b',
-			legend = dict(
-				title="Year :",
-				orientation="v",
-				itemclick ="toggle",
-				itemdoubleclick ="toggleothers"				
-				),
-			xaxis = dict(
-				title = "Month",
-				nticks =12
-				#tickmode = 'linear',
-				#type="start_date"
-				),
-			yaxis = dict(
-				title = "Cumul Km",
-				nticks =20,
-				dtick= dtick1
-				),
-			)	
+		if listDataType[0] == "time":
+			#convert to time
+			df["cumul"] = pd.to_timedelta(df["cumul"], unit='s')
+			df["moving_time"] = pd.to_timedelta(df["moving_time"], unit='s')
 		
-		plot_div = offline.plot({"data": graphList,
-			"layout": layout},
-			include_plotlyjs=False,
-			output_type='div')
+		print(str(df))
+		#print(tabulate(df, headers='keys', tablefmt='psql'))
+						
+		if not df.empty:	
+			df["year"] = df["year"].apply(str)
+			listLines = df["year"].unique()
+			
+			graphList = []
+			for line in listLines:
+				#print("listLine : " + str(line))
+				filter = df["year"] == line
+				dfFilter = df[filter]	
+				
+				# objectif line
+				if line.find("km") != -1:
+					graph = go.Scatter(
+						x=dfFilter["start_date"],
+						y=dfFilter["cumul"],
+						name=line,
+						opacity=1,
+						mode="lines",
+						line=dict(dash="dashdot", width=3), # dot, dash, dashdot
+						text = line,
+						marker=dict(
+							symbol="circle",
+							size=6,
+							line=dict(width=0,
+								color='DarkSlateGrey'
+								),
+						),		
+						hovertemplate = 'Objective : %{data.name}<br>%{x|%d/%m}<br>%{y:.1f} kms<extra></extra>',			
+					)
+				else:
+					# Normal line
+					graph = go.Scatter(
+						x=dfFilter["start_date"],
+						y=dfFilter["cumul"],
+						customdata=dfFilter[dataType],
+						name=line,
+						opacity=1,
+						mode="markers+lines",
+						text = line,
+						marker=dict(
+							symbol="circle",
+							size=6,
+							line=dict(width=0,
+								color='DarkSlateGrey'
+								),
+						),			
+						line=dict(dash="solid", width=2), # dot, dash, dashdot
+						hovertemplate = hovertemplate1,						
+					)
+				
+				graphList.append(graph)
+				
+				
+			layout = go.Layout(
+				title= layout_title ,
+				autosize=True,
+				xaxis_tickformat = '%-d-%b',
+				legend = dict(
+					title="Year :",
+					orientation="v",
+					itemclick ="toggle",
+					itemdoubleclick ="toggleothers"				
+					),
+				xaxis = dict(
+					title = "Month",
+					nticks =12
+					#tickmode = 'linear',
+					#type="start_date"
+					),
+				yaxis = dict(
+					title = yaxis_title,
+					tickmode=tickmode1,
+					nticks =nticks1,
+					dtick= dtick1
+					),
+				)	
+			
+			plot_div = offline.plot({"data": graphList,
+				"layout": layout},
+				include_plotlyjs=False,
+				output_type='div')
 
-		# bidouille pour créer une fonction de creation du plot
-		'''plot_div = re.sub(
-			r'window.PLOTLYENV=window.PLOTLYENV',
-			r'\r	function displayPlot() {\r		window.PLOTLYENV=window.PLOTLYENV',
-			plot_div)   
-			
-		plot_div = re.sub(
-			r' }',
-			r' }\r}\r	displayPlot()',
-			plot_div)'''
-			
-			
+			# bidouille pour créer une fonction de creation du plot
+			'''plot_div = re.sub(
+				r'window.PLOTLYENV=window.PLOTLYENV',
+				r'\r	function displayPlot() {\r		window.PLOTLYENV=window.PLOTLYENV',
+				plot_div)   
+				
+			plot_div = re.sub(
+				r' }',
+				r' }\r}\r	displayPlot()',
+				plot_div)'''
+				
+				
 	
 
 	return plot_div
