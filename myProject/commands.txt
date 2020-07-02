@@ -28,6 +28,8 @@ systemctl status nginx
 gunicorn myProject.wsgi:application
 gunicorn -c gunicorn.py myProject.wsgi:application --log-level=debug 
 
+#DB browser for SQL lite
+
 
 
 #linux log

@@ -118,6 +118,14 @@
 		<div class="content" id="id_content">
 			{% block content %}
 			{% endblock %}
+			
+			var myPlot = document.getElementById('id_content'),  
+
+			
+
+			myPlot.on('plotly_click', function(){
+				alert('You clicked this Plotly chart!');
+			});
 		</div>
 	</section>
 		

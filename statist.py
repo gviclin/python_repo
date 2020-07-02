@@ -239,7 +239,7 @@ class Statist():
 					
 				self.logger.debug("dataType : " + dataType)
 				
-				df_data = df_by[[dataType]]					
+				df_data = df_by[[dataType]]
 				
 				df_data.reset_index(level="year", inplace=True)
 				df_data.reset_index(level=byWhat, inplace=True)	
@@ -250,8 +250,9 @@ class Statist():
 						
 				df_data.fillna(0, inplace=True)
 				
-				print(df_data.info(verbose=True))		
-				print(tabulate(df_data, headers='keys', tablefmt='psql'))
+				print(str(df_data))
+				#print(df_data.dtypes)
+				print(df_data.index)
 				
 				#fill empty year
 				listYear = list(df_data.index.values)

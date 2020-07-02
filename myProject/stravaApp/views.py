@@ -7,7 +7,7 @@ from django.conf import settings
 from .models import User
 from .forms import PostSettings
 
-from datetime import datetime, tzinfo
+from datetime import datetime, tzinfo, date
 import pytz
 
 from tabulate import tabulate
@@ -469,7 +469,7 @@ def generateGraph(id, listActivityType, listDataType, objList):
 		if listDataType[0] == "distance":
 			dataType = "distance"
 			layout_title = "Cumulative distance (" + listActivityType[0] + ")"
-			yaxis_title = "Km"
+			yaxis_title = "Distance (km)"
 			yaxis_tickformat1=""
 			tickmode1="auto"
 			dtick1 = 100 if "Run" in listActivityType else 1000
@@ -480,17 +480,17 @@ def generateGraph(id, listActivityType, listDataType, objList):
 		elif listDataType[0] == "time":			
 			dataType = "moving_time"
 			layout_title = "Cumulative moving time (" + listActivityType[0] + ")"
-			yaxis_title = "Time"
-			yaxis_tickformat1=".3f" #'%e days'
+			yaxis_title = "Time (hours)"
+			yaxis_tickformat1=".0f hours" #'%e days'
 			tickmode1="auto"
 			dtick1 = 0
 			nticks1 = 0
 			#hovertemplate1 = '%{x|%d/%m}/%{data.name}<br>%{y|(%e days %X} <br>Activity : %{customdata|%X} <extra></extra>'
-			hovertemplate1 = '%{x|%d/%m}/%{data.name}<br>%{y:.2f}:%{y:.2f} <br>Activity : %{customdata|%X} <extra></extra>'
+			hovertemplate1 = '%{x|%d/%m}/%{data.name}<br>%{y:.1f} hours <br>Activity : %{customdata|%X} <extra></extra>'
 		elif listDataType[0] == "elevation":
 			dataType = "total_elevation_gain"
 			layout_title = "Cumulative elevation gain (" + listActivityType[0] + ")"
-			yaxis_title = "Meters"
+			yaxis_title = "Elevation gain (meter)"
 			yaxis_tickformat1=""
 			tickmode1="auto"
 			dtick1 = 0
@@ -502,17 +502,22 @@ def generateGraph(id, listActivityType, listDataType, objList):
 		if listDataType[0] == "time":
 			#convert to time
 			# time delta issue : https://github.com/plotly/plotly.py/issues/801
-			'''df["cumul"] = pd.to_timedelta(df["cumul"], unit='s') + pd.to_datetime('1970/01/01')
-			df["moving_time"] = pd.to_timedelta(df["moving_time"], unit='s') + pd.to_datetime('1970/01/01')'''
+			'''df["cumul"] = pd.to_timedelta(df["cumul"], unit='s') + pd.to_datetime('1970/01/01')'''
+			df["moving_time"] = pd.to_timedelta(df["moving_time"], unit='s') + pd.to_datetime('1970/01/01')
+			df["cumul"] = df["cumul"].apply(lambda value: value / 3600)
+					
+
 		
-		print(str(df))
+		'''print(str(df))
 		print(df.dtypes)
-		print(df.index)
+		print(df.index)'''
 		#print(tabulate(df, headers='keys', tablefmt='psql'))
 						
 		if not df.empty:	
 			df["year"] = df["year"].apply(str)
 			listLines = df["year"].unique()
+			
+			maxCumul = df["cumul"].max()
 			
 			graphList = []
 			for line in listLines:
@@ -556,13 +561,41 @@ def generateGraph(id, listActivityType, listDataType, objList):
 								color='DarkSlateGrey'
 								),
 						),			
-						line=dict(dash="solid", width=2), # dot, dash, dashdot
+						line=dict(dash="solid", width=2), # dash = dot, dash, dashdot
 						hovertemplate = hovertemplate1,						
 					)
+					'''does't work in offline mode
+					def handle_click(trace, points, state):
+						print(points.point_inds)
+						logger.debug("points.point_inds")
+						logger.debug("zzz")
+
+					graph.on_click(handle_click)'''
 				
 				graphList.append(graph)
-				
-				
+			
+			#add vertical line
+			today = date.today()
+			graph = go.Scatter(
+						x=[datetime.datetime(1904, today.month, today.day,0,0,0), datetime.datetime(1904, today.month, today.day,0,0,0)],
+						y=[0, maxCumul],
+						name="Now",
+						opacity=1,
+						mode="lines",
+						line=dict(color="black", width=2), # dot, dash, dashdot
+						text = line,
+						marker=dict(
+							symbol="circle",
+							size=6,
+							line=dict(width=0,
+								color='DarkSlateGrey'
+								),
+						),	
+						hoverinfo="none",
+					)	
+						
+			graphList.append(graph)
+						
 			layout = go.Layout(
 				title= layout_title ,
 				autosize=True,
@@ -592,18 +625,10 @@ def generateGraph(id, listActivityType, listDataType, objList):
 				"layout": layout},
 				include_plotlyjs=False,
 				output_type='div')
+				
 
-			# bidouille pour créer une fonction de creation du plot
-			'''plot_div = re.sub(
-				r'window.PLOTLYENV=window.PLOTLYENV',
-				r'\r	function displayPlot() {\r		window.PLOTLYENV=window.PLOTLYENV',
-				plot_div)   
-				
-			plot_div = re.sub(
-				r' }',
-				r' }\r}\r	displayPlot()',
-				plot_div)'''
-				
+
+
 				
 	
 
